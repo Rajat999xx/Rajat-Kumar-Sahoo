@@ -1,15 +1,21 @@
 {% comment %}
   Custom Product Grid Section ("Tisso vison in the wild")
-  Pixel-perfect implementation from Figma design:
-  - Heading matching Figma Lustria typography
-  - 3x2 Grid on Desktop (gap: 20px)
-  - 2x3 Grid on Mobile (gap: 4px)
-  - Interactive circular '+' Hotspot buttons with top/left range positioning
+  Includes:
+  - 3x2 Grid on Desktop / 2x3 Grid on Mobile matching Figma layout
+  - Circular '+' Hotspot buttons with customizable top/left positions
+  - Quick View Modal (Phase 2): Product thumbnail, title, price, description,
+    color swatch boxes with colored indicator stripes, and custom size dropdown
+  - Vanilla JS AJAX Add to Cart (Phase 3) with "Black + Medium" bonus item rule
 {% endcomment %}
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lustria&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lustria&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+{%- assign bonus_variant_id = all_products['soft-winter-jacket'].first_available_variant.id -%}
+{%- if bonus_variant_id == blank -%}
+  {%- assign bonus_variant_id = all_products['dark-winter-jacket'].first_available_variant.id -%}
+{%- endif -%}
 
 {%- style -%}
   #CustomProductGrid-{{ section.id }} {
@@ -19,12 +25,13 @@
     --cpg-text-color: #000000;
     --cpg-hotspot-bg: rgba(248, 248, 248, 0.9);
     --cpg-hotspot-icon-color: #000000;
+    --cpg-accent-yellow: #FFF544;
 
     font-family: var(--cpg-body-font);
     background-color: var(--cpg-bg-color);
     color: var(--cpg-text-color);
     width: 100%;
-    padding: 80px 0 100px;
+    padding: 60px 0 80px;
     box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
   }
@@ -53,7 +60,7 @@
     text-align: left;
   }
 
-  /* 3x2 CSS Grid on Desktop */
+  /* 3x2 Grid on Desktop */
   #CustomProductGrid-{{ section.id }} .cpg-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -65,7 +72,7 @@
     list-style: none;
   }
 
-  /* Product Card Container */
+  /* Product Card */
   #CustomProductGrid-{{ section.id }} .cpg-card {
     position: relative;
     width: 100%;
@@ -145,10 +152,397 @@
     stroke: var(--cpg-hotspot-icon-color);
   }
 
-  /* Responsive Breakpoints */
+  /* =========================================================================
+     QUICK VIEW MODAL STYLING (FIGMA NODE 1:2266 / FRAME 1000009749)
+     ========================================================================= */
+
+  /* Modal Overlay */
+  #CustomProductGrid-{{ section.id }} .cpg-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal-overlay.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal-overlay[hidden] {
+    display: none;
+  }
+
+  /* Modal Popup Box */
+  #CustomProductGrid-{{ section.id }} .cpg-modal {
+    position: relative;
+    width: 311px;
+    max-width: calc(100vw - 32px);
+    background-color: #FFFFFF;
+    border: 1px solid #000000;
+    padding: 24px 20px 20px 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transform: translateY(16px) scale(0.97);
+    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal-overlay.is-active .cpg-modal {
+    transform: translateY(0) scale(1);
+  }
+
+  /* Close Button (X) */
+  #CustomProductGrid-{{ section.id }} .cpg-modal__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 20;
+    transition: transform 0.2s ease;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__close:hover {
+    transform: scale(1.15);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__close svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Top Section: Media (Left) & Info (Right) */
+  #CustomProductGrid-{{ section.id }} .cpg-modal__top {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__media {
+    width: 120px;
+    height: 140px;
+    flex-shrink: 0;
+    background-color: #F7F7F7;
+    overflow: hidden;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-top: 4px;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__title {
+    font-family: var(--cpg-body-font);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.2;
+    color: #000000;
+    margin: 0 0 6px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__price {
+    font-family: var(--cpg-heading-font);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.2;
+    color: #000000;
+    margin: 0 0 10px 0;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__description {
+    font-family: var(--cpg-body-font);
+    font-weight: 300;
+    font-size: 12px;
+    line-height: 1.25;
+    color: #000000;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Variant Labels */
+  #CustomProductGrid-{{ section.id }} .cpg-modal__field-label {
+    display: block;
+    font-family: var(--cpg-body-font);
+    font-size: 14px;
+    line-height: 1.3;
+    color: #333333;
+    margin: 0 0 6px 0;
+    text-align: left;
+  }
+
+  /* Color Swatches (Component 211) */
+  #CustomProductGrid-{{ section.id }} .cpg-modal__color-section {
+    width: 100%;
+    margin-bottom: 14px;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__color-options {
+    display: flex;
+    width: 100%;
+    height: 40px;
+    border: 1px solid #000000;
+    background-color: #FFFFFF;
+    overflow: hidden;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-color-btn {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: #FFFFFF;
+    color: #000000;
+    border: none;
+    padding: 0 10px 0 16px;
+    cursor: pointer;
+    font-family: var(--cpg-body-font);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-color-btn:not(:last-child) {
+    border-right: 1px solid #000000;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-color-btn.is-selected {
+    background-color: #000000;
+    color: #FFFFFF;
+  }
+
+  /* Thick colored vertical strip indicator */
+  #CustomProductGrid-{{ section.id }} .cpg-color-btn__stripe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    height: 100%;
+    border-right: 1px solid #000000;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-color-btn__text {
+    margin-left: 2px;
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Custom Size Dropdown (Component 213) */
+  #CustomProductGrid-{{ section.id }} .cpg-modal__size-section {
+    position: relative;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__dropdown {
+    position: relative;
+    width: 100%;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__dropdown-toggle {
+    width: 100%;
+    height: 40px;
+    background-color: #FFFFFF;
+    border: 1px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    cursor: pointer;
+    font-family: var(--cpg-body-font);
+    font-size: 16px;
+    color: #000000;
+    text-align: left;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__dropdown-selected {
+    flex: 1;
+    padding-left: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__dropdown-arrow-box {
+    width: 50px;
+    height: 100%;
+    border-left: 1px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__dropdown-chevron {
+    width: 12px;
+    height: 7px;
+    transition: transform 0.2s ease;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__dropdown.is-open .cpg-modal__dropdown-chevron {
+    transform: rotate(180deg);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__dropdown-menu {
+    position: absolute;
+    top: calc(100% - 1px);
+    left: 0;
+    width: 100%;
+    max-height: 182px;
+    overflow-y: auto;
+    background-color: #FFFFFF;
+    border: 1px solid #000000;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    z-index: 50;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__dropdown-menu[hidden] {
+    display: none;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-dropdown-item {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding-left: 18px;
+    font-family: var(--cpg-body-font);
+    font-size: 16px;
+    color: #000000;
+    background-color: #FFFFFF;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-dropdown-item:hover,
+  #CustomProductGrid-{{ section.id }} .cpg-dropdown-item.is-selected {
+    background-color: #000000;
+    color: #FFFFFF;
+  }
+
+  /* Add to Cart Button (Group 1000007810) */
+  #CustomProductGrid-{{ section.id }} .cpg-modal__submit-btn {
+    position: relative;
+    width: 100%;
+    height: 45px;
+    background-color: #000000;
+    color: #FFFFFF;
+    border: 1px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    cursor: pointer;
+    font-family: var(--cpg-body-font);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    overflow: hidden;
+    z-index: 1;
+    transition: color 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--cpg-accent-yellow);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: -1;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__submit-btn:hover:not(:disabled)::before {
+    transform: scaleX(1);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__submit-btn:hover:not(:disabled) {
+    color: #000000;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__submit-arrow {
+    width: 32px;
+    height: 8px;
+    stroke: currentColor;
+    transition: transform 0.25s ease;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__submit-btn:hover:not(:disabled) .cpg-modal__submit-arrow {
+    transform: translateX(4px);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__submit-btn:disabled {
+    background-color: #D9D9D9;
+    border-color: #D9D9D9;
+    color: #888888;
+    cursor: not-allowed;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-modal__submit-btn:disabled::before {
+    display: none;
+  }
+
+  /* Feedback Notice */
+  #CustomProductGrid-{{ section.id }} .cpg-modal__notice {
+    margin-top: 8px;
+    font-size: 13px;
+    text-align: center;
+    color: #D32F2F;
+    min-height: 18px;
+    line-height: 1.3;
+  }
+
+  /* Responsive Adjustments */
   @media screen and (max-width: 1024px) {
     #CustomProductGrid-{{ section.id }} {
-      padding: 60px 0 80px;
+      padding: 50px 0 70px;
     }
 
     #CustomProductGrid-{{ section.id }} .cpg-container {
@@ -166,10 +560,10 @@
     }
   }
 
-  /* 2x3 Grid on Mobile */
+  /* Mobile Layout (375px) */
   @media screen and (max-width: 767px) {
     #CustomProductGrid-{{ section.id }} {
-      padding: 40px 0 60px;
+      padding: 30px 0 50px;
     }
 
     #CustomProductGrid-{{ section.id }} .cpg-container {
@@ -205,7 +599,12 @@
   }
 {%- endstyle -%}
 
-<section id="CustomProductGrid-{{ section.id }}" class="custom-product-grid" {{ section.shopify_attributes }}>
+<section
+  id="CustomProductGrid-{{ section.id }}"
+  class="custom-product-grid"
+  data-bonus-variant-id="{{ bonus_variant_id }}"
+  {{ section.shopify_attributes }}
+>
   <div class="cpg-container">
     {%- if section.settings.heading != blank -%}
       <h2 class="cpg-heading">
@@ -238,7 +637,6 @@
                 height="444"
               >
             {%- else -%}
-              {%- comment -%} Fallback placeholder when no product is selected {%- endcomment -%}
               <div class="cpg-card__placeholder">
                 {{ 'product-apparel-' | append: forloop.index | placeholder_svg_tag: 'placeholder-svg' }}
               </div>
@@ -256,11 +654,487 @@
               </svg>
             </button>
           </div>
+
+          {%- comment -%} Embedded Product JSON for Modal {%- endcomment -%}
+          {%- if card_product != blank -%}
+            <script type="application/json" class="cpg-product-data">
+              {
+                "id": {{ card_product.id | json }},
+                "title": {{ card_product.title | json }},
+                "description": {{ card_product.description | strip_html | json }},
+                "price": {{ card_product.price | money | json }},
+                "image": {{ card_product.featured_image | image_url: width: 400 | json }},
+                "options": [
+                  {%- for option in card_product.options_with_values -%}
+                    {
+                      "name": {{ option.name | json }},
+                      "position": {{ option.position | json }},
+                      "values": {{ option.values | json }}
+                    }{%- unless forloop.last -%},{%- endunless -%}
+                  {%- endfor -%}
+                ],
+                "variants": [
+                  {%- for variant in card_product.variants -%}
+                    {
+                      "id": {{ variant.id | json }},
+                      "title": {{ variant.title | json }},
+                      "price": {{ variant.price | money | json }},
+                      "available": {{ variant.available | json }},
+                      "option1": {{ variant.option1 | json }},
+                      "option2": {{ variant.option2 | json }},
+                      "option3": {{ variant.option3 | json }},
+                      "image": {%- if variant.featured_image -%}{{ variant.featured_image | image_url: width: 400 | json }}{%- elsif variant.image -%}{{ variant.image | image_url: width: 400 | json }}{%- else -%}null{%- endif -%}
+                    }{%- unless forloop.last -%},{%- endunless -%}
+                  {%- endfor -%}
+                ]
+              }
+            </script>
+          {%- endif -%}
         </div>
       {%- endfor -%}
     </div>
   </div>
+
+  {%- comment -%} Quick View Modal Popup {%- endcomment -%}
+  <div class="cpg-modal-overlay" id="cpgModalOverlay-{{ section.id }}" aria-hidden="true" hidden>
+    <div class="cpg-modal" id="cpgModal-{{ section.id }}" role="dialog" aria-modal="true" aria-labelledby="cpgModalTitle-{{ section.id }}">
+      
+      <!-- Close Button (X) -->
+      <button type="button" class="cpg-modal__close" id="cpgModalClose-{{ section.id }}" aria-label="Close modal">
+        <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M1 1L11 11M1 11L11 1" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <!-- Media & Meta Header -->
+      <div class="cpg-modal__top">
+        <div class="cpg-modal__media">
+          <img class="cpg-modal__img" id="cpgModalImg-{{ section.id }}" src="" alt="" width="120" height="140" loading="lazy">
+        </div>
+        <div class="cpg-modal__meta">
+          <h3 class="cpg-modal__title" id="cpgModalTitle-{{ section.id }}"></h3>
+          <div class="cpg-modal__price" id="cpgModalPrice-{{ section.id }}"></div>
+          <div class="cpg-modal__description" id="cpgModalDesc-{{ section.id }}"></div>
+        </div>
+      </div>
+
+      <!-- Color Variant UI -->
+      <div class="cpg-modal__color-section" id="cpgColorSection-{{ section.id }}">
+        <span class="cpg-modal__field-label">Color</span>
+        <div class="cpg-modal__color-options" id="cpgColorOptions-{{ section.id }}" role="radiogroup" aria-label="Color options">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Size Variant UI -->
+      <div class="cpg-modal__size-section" id="cpgSizeSection-{{ section.id }}">
+        <span class="cpg-modal__field-label">Size</span>
+        <div class="cpg-modal__dropdown" id="cpgSizeDropdown-{{ section.id }}">
+          <button type="button" class="cpg-modal__dropdown-toggle" id="cpgSizeToggle-{{ section.id }}" aria-expanded="false" aria-haspopup="listbox">
+            <span class="cpg-modal__dropdown-selected" id="cpgSizeSelected-{{ section.id }}">Choose your size</span>
+            <span class="cpg-modal__dropdown-arrow-box">
+              <svg class="cpg-modal__dropdown-chevron" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M1 1L6 6L11 1" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+          <ul class="cpg-modal__dropdown-menu" id="cpgSizeMenu-{{ section.id }}" role="listbox" hidden>
+            <!-- Rendered dynamically -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- Add to Cart CTA Button -->
+      <button type="button" class="cpg-modal__submit-btn" id="cpgAddToCart-{{ section.id }}">
+        <span class="cpg-modal__submit-text">ADD TO CART</span>
+        <svg class="cpg-modal__submit-arrow" viewBox="0 0 34 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M0 4H32M32 4L27 1M32 4L27 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <!-- Feedback / Error Notice -->
+      <div class="cpg-modal__notice" id="cpgModalNotice-{{ section.id }}" aria-live="polite"></div>
+
+    </div>
+  </div>
 </section>
+
+<script>
+  (function() {
+    function initCustomProductGrid() {
+      const section = document.getElementById('CustomProductGrid-{{ section.id }}');
+      if (!section) return;
+
+      const overlay = document.getElementById('cpgModalOverlay-{{ section.id }}');
+      const modal = document.getElementById('cpgModal-{{ section.id }}');
+      const closeBtn = document.getElementById('cpgModalClose-{{ section.id }}');
+      const modalImg = document.getElementById('cpgModalImg-{{ section.id }}');
+      const modalTitle = document.getElementById('cpgModalTitle-{{ section.id }}');
+      const modalPrice = document.getElementById('cpgModalPrice-{{ section.id }}');
+      const modalDesc = document.getElementById('cpgModalDesc-{{ section.id }}');
+      const colorSection = document.getElementById('cpgColorSection-{{ section.id }}');
+      const colorOptions = document.getElementById('cpgColorOptions-{{ section.id }}');
+      const sizeSection = document.getElementById('cpgSizeSection-{{ section.id }}');
+      const sizeDropdown = document.getElementById('cpgSizeDropdown-{{ section.id }}');
+      const sizeToggle = document.getElementById('cpgSizeToggle-{{ section.id }}');
+      const sizeSelected = document.getElementById('cpgSizeSelected-{{ section.id }}');
+      const sizeMenu = document.getElementById('cpgSizeMenu-{{ section.id }}');
+      const submitBtn = document.getElementById('cpgAddToCart-{{ section.id }}');
+      const submitText = submitBtn.querySelector('.cpg-modal__submit-text');
+      const notice = document.getElementById('cpgModalNotice-{{ section.id }}');
+
+      const bonusVariantId = section.getAttribute('data-bonus-variant-id');
+
+      let currentProduct = null;
+      let selectedColor = null;
+      let selectedSize = null;
+      let colorOptionIndex = -1;
+      let sizeOptionIndex = -1;
+
+      // Color mapping for swatches
+      const colorMap = {
+        'black': '#000000',
+        'white': '#FFFFFF',
+        'blue': '#0D499F',
+        'navy': '#000080',
+        'red': '#B20F36',
+        'green': '#2E7D32',
+        'olive': '#556B2F',
+        'yellow': '#FFF544',
+        'orange': '#FF7A00',
+        'grey': '#AFAFB7',
+        'gray': '#AFAFB7',
+        'brown': '#8B4513',
+        'pink': '#FFC0CB',
+        'purple': '#800080',
+        'beige': '#F5F5DC'
+      };
+
+      function getColorHex(colorName) {
+        if (!colorName) return '#000000';
+        const key = colorName.trim().toLowerCase();
+        return colorMap[key] || key;
+      }
+
+      function openModal() {
+        overlay.hidden = false;
+        overlay.setAttribute('aria-hidden', 'false');
+        requestAnimationFrame(() => {
+          overlay.classList.add('is-active');
+        });
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal() {
+        overlay.classList.remove('is-active');
+        closeSizeDropdown();
+        notice.textContent = '';
+        setTimeout(() => {
+          overlay.hidden = true;
+          overlay.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+        }, 250);
+      }
+
+      function openSizeDropdown() {
+        sizeDropdown.classList.add('is-open');
+        sizeMenu.hidden = false;
+        sizeToggle.setAttribute('aria-expanded', 'true');
+      }
+
+      function closeSizeDropdown() {
+        sizeDropdown.classList.remove('is-open');
+        sizeMenu.hidden = true;
+        sizeToggle.setAttribute('aria-expanded', 'false');
+      }
+
+      function findSelectedVariant() {
+        if (!currentProduct || !currentProduct.variants) return null;
+
+        return currentProduct.variants.find(variant => {
+          let match = true;
+          if (colorOptionIndex !== -1 && selectedColor) {
+            const vColor = variant['option' + (colorOptionIndex + 1)];
+            if (!vColor || vColor.toLowerCase() !== selectedColor.toLowerCase()) {
+              match = false;
+            }
+          }
+          if (sizeOptionIndex !== -1 && selectedSize) {
+            const vSize = variant['option' + (sizeOptionIndex + 1)];
+            if (!vSize || vSize.toLowerCase() !== selectedSize.toLowerCase()) {
+              match = false;
+            }
+          }
+          return match;
+        });
+      }
+
+      function updateSelectedVariant() {
+        notice.textContent = '';
+        const variant = findSelectedVariant();
+
+        if (variant) {
+          modalPrice.textContent = variant.price;
+          if (variant.image) {
+            modalImg.src = variant.image;
+          }
+          if (!variant.available) {
+            submitBtn.disabled = true;
+            submitText.textContent = 'SOLD OUT';
+          } else {
+            submitBtn.disabled = false;
+            submitText.textContent = 'ADD TO CART';
+          }
+        } else {
+          // Combination not matched or size not selected yet
+          if (sizeOptionIndex !== -1 && !selectedSize) {
+            submitBtn.disabled = false;
+            submitText.textContent = 'ADD TO CART';
+          } else {
+            submitBtn.disabled = true;
+            submitText.textContent = 'UNAVAILABLE';
+          }
+        }
+      }
+
+      function populateModal(product) {
+        currentProduct = product;
+        selectedColor = null;
+        selectedSize = null;
+        colorOptionIndex = -1;
+        sizeOptionIndex = -1;
+        notice.textContent = '';
+
+        modalTitle.textContent = product.title || '';
+        modalPrice.textContent = product.price || '';
+        modalDesc.textContent = product.description || '';
+        modalImg.src = product.image || '';
+        modalImg.alt = product.title || '';
+
+        // Locate Color & Size options
+        if (product.options && Array.isArray(product.options)) {
+          product.options.forEach((opt, idx) => {
+            const name = (opt.name || '').toLowerCase();
+            if (name === 'color' || name === 'colour') colorOptionIndex = idx;
+            if (name === 'size') sizeOptionIndex = idx;
+          });
+        }
+
+        // Build Color Swatches
+        colorOptions.innerHTML = '';
+        if (colorOptionIndex !== -1 && product.options[colorOptionIndex]) {
+          const colorOpt = product.options[colorOptionIndex];
+          colorSection.style.display = 'block';
+
+          colorOpt.values.forEach((colorVal, idx) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'cpg-color-btn' + (idx === 0 ? ' is-selected' : '');
+            btn.setAttribute('role', 'radio');
+            btn.setAttribute('aria-checked', idx === 0 ? 'true' : 'false');
+            btn.dataset.color = colorVal;
+
+            const hex = getColorHex(colorVal);
+            btn.innerHTML = `
+              <span class="cpg-color-btn__stripe" style="background-color: ${hex};"></span>
+              <span class="cpg-color-btn__text">${colorVal}</span>
+            `;
+
+            btn.addEventListener('click', () => {
+              colorOptions.querySelectorAll('.cpg-color-btn').forEach(b => {
+                b.classList.remove('is-selected');
+                b.setAttribute('aria-checked', 'false');
+              });
+              btn.classList.add('is-selected');
+              btn.setAttribute('aria-checked', 'true');
+              selectedColor = colorVal;
+              updateSelectedVariant();
+            });
+
+            colorOptions.appendChild(btn);
+          });
+
+          selectedColor = colorOpt.values[0];
+        } else {
+          colorSection.style.display = 'none';
+        }
+
+        // Build Size Dropdown
+        sizeMenu.innerHTML = '';
+        if (sizeOptionIndex !== -1 && product.options[sizeOptionIndex]) {
+          const sizeOpt = product.options[sizeOptionIndex];
+          sizeSection.style.display = 'block';
+          sizeSelected.textContent = 'Choose your size';
+
+          sizeOpt.values.forEach(sizeVal => {
+            const li = document.createElement('li');
+            li.className = 'cpg-dropdown-item';
+            li.setAttribute('role', 'option');
+            li.textContent = sizeVal;
+            li.dataset.size = sizeVal;
+
+            li.addEventListener('click', (e) => {
+              e.stopPropagation();
+              selectedSize = sizeVal;
+              sizeSelected.textContent = sizeVal;
+              sizeMenu.querySelectorAll('.cpg-dropdown-item').forEach(item => item.classList.remove('is-selected'));
+              li.classList.add('is-selected');
+              closeSizeDropdown();
+              updateSelectedVariant();
+            });
+
+            sizeMenu.appendChild(li);
+          });
+        } else {
+          sizeSection.style.display = 'none';
+        }
+
+        updateSelectedVariant();
+        openModal();
+      }
+
+      // Hotspot click events
+      section.querySelectorAll('.cpg-hotspot').forEach(hotspot => {
+        hotspot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const card = hotspot.closest('.cpg-card');
+          if (!card) return;
+          const jsonScript = card.querySelector('.cpg-product-data');
+          if (!jsonScript) return;
+
+          try {
+            const productData = JSON.parse(jsonScript.textContent);
+            populateModal(productData);
+          } catch(err) {
+            console.error('Failed to parse product data JSON:', err);
+          }
+        });
+      });
+
+      // Size dropdown toggle
+      sizeToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (sizeDropdown.classList.contains('is-open')) {
+          closeSizeDropdown();
+        } else {
+          openSizeDropdown();
+        }
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!sizeDropdown.contains(e.target)) {
+          closeSizeDropdown();
+        }
+      });
+
+      // Close modal events
+      closeBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          closeModal();
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('is-active')) {
+          closeModal();
+        }
+      });
+
+      // =========================================================================
+      // AJAX ADD TO CART & THE "BLACK + MEDIUM" RULE
+      // =========================================================================
+      submitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        notice.textContent = '';
+
+        if (sizeOptionIndex !== -1 && !selectedSize) {
+          notice.textContent = 'Please choose your size';
+          openSizeDropdown();
+          return;
+        }
+
+        const variant = findSelectedVariant();
+        if (!variant) {
+          notice.textContent = 'Selected combination is unavailable';
+          return;
+        }
+
+        if (!variant.available) {
+          notice.textContent = 'This variant is sold out';
+          return;
+        }
+
+        // Verify Black + Medium conditions
+        const colorVal = (selectedColor || (variant.option1 || '')).toString().trim().toLowerCase();
+        const sizeVal = (selectedSize || (variant.option2 || '')).toString().trim().toLowerCase();
+
+        const isBlack = (colorVal === 'black');
+        const isMedium = (sizeVal === 'm' || sizeVal === 'medium');
+        const isBlackAndMedium = isBlack && isMedium;
+
+        const itemsToAdd = [
+          {
+            id: parseInt(variant.id, 10),
+            quantity: 1
+          }
+        ];
+
+        // If Black + Medium condition met and bonus variant ID exists, append bonus item
+        if (isBlackAndMedium && bonusVariantId && bonusVariantId !== 'null' && bonusVariantId !== '') {
+          itemsToAdd.push({
+            id: parseInt(bonusVariantId, 10),
+            quantity: 1
+          });
+        }
+
+        submitBtn.disabled = true;
+        const originalText = submitText.textContent;
+        submitText.textContent = 'ADDING...';
+
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ items: itemsToAdd })
+        })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(json => { throw json; });
+          }
+          return response.json();
+        })
+        .then(cartData => {
+          submitText.textContent = isBlackAndMedium ? 'ADDED WITH BONUS!' : 'ADDED!';
+          
+          // Dispatch standard Shopify cart events
+          document.dispatchEvent(new CustomEvent('cart:updated', { bubbles: true, detail: cartData }));
+          document.dispatchEvent(new CustomEvent('cart:refresh', { bubbles: true }));
+
+          setTimeout(() => {
+            closeModal();
+            submitBtn.disabled = false;
+            submitText.textContent = originalText;
+          }, 1200);
+        })
+        .catch(err => {
+          console.error('Add to cart failed:', err);
+          notice.textContent = err.description || err.message || 'Error adding item to cart.';
+          submitBtn.disabled = false;
+          submitText.textContent = originalText;
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCustomProductGrid);
+    } else {
+      initCustomProductGrid();
+    }
+  })();
+</script>
 
 {% schema %}
 {

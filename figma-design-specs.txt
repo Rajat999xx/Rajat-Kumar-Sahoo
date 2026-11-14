@@ -293,3 +293,335 @@ Mechanic:
 - #FFF544 (rgb: 255, 245, 68)  : Primary Accent Yellow (Choose Gift Button & Shop Now Hover Fill)
 - #000000 (rgb: 0, 0, 0)       : Primary Text, Borders, Line Art Vectors, Shop Now Button Background
 - rgba(0, 0, 0, 0.05)          : Subtle Section Dividers / Borders
+
+
+================================================================================
+6. SECTION 2: 6-PRODUCT GRID ("Tisso vison in the wild")
+================================================================================
+
+[DESKTOP] Frame 1000009744 (Node ID: 1:1662)
+--------------------------------------------------------------------------------
+- Section Container Dimensions: Width 1337px (inner content) inside 1440px canvas
+- Outer Section Padding: Top 60px, Bottom 80px, Left 50px, Right 50px
+- Background: #FFFFFF (White)
+
+Heading: "Tisso vison in the wild" (Node ID: 1:1663)
+  - Dimensions: Width 372px, Height 43px
+  - Typography:
+    * Font Family: 'Lustria' (serif)
+    * Font Weight: 400 (Regular)
+    * Font Size: 36px
+    * Line Height: 1.2 (43.2px / RAW: 1.2000000476837158)
+    * Letter Spacing: 0px
+    * Text Align: Left
+    * Color: #000000 (Solid Black)
+  - Margin Bottom: 30px (Auto-layout stack gap: 30px)
+
+Desktop Product Grid: Frame 1000009723 (Node ID: 1:1664)
+  - Dimensions: Width 1339px, Height 908px
+  - Grid Configuration: 3 columns x 2 rows
+  - Column Gap: 20px
+  - Row Gap: 20px
+  - Card Size: Width 433px, Height 444px
+  - Aspect Ratio: 433 / 444 (~0.9752)
+  - Overflow: Hidden
+  - Positioning: Relative (to anchor absolute hotspot pins)
+
+[MOBILE] Frame 1000009745 (Node ID: 1:1946)
+--------------------------------------------------------------------------------
+- Section Container Dimensions: Width 342px inside 375px viewport
+- Outer Section Padding: Top 30px, Bottom 40px, Left 16px, Right 16px
+- Background: #FFFFFF (White)
+
+Heading: "Tisso vison in the wild" (Node ID: 1:1947)
+  - Dimensions: Width 248px, Height 29px
+  - Typography:
+    * Font Family: 'Lustria' (serif)
+    * Font Weight: 400 (Regular)
+    * Font Size: 24px
+    * Line Height: 1.2 (28.8px / RAW: 1.2000000476837158)
+    * Letter Spacing: 0px
+    * Text Align: Center (centered horizontally on mobile)
+    * Color: #000000 (Solid Black)
+  - Margin Bottom: 20px (Auto-layout stack gap: 20px)
+
+Mobile Product Grid: Frame 1000009723 (Node ID: 1:1948)
+  - Dimensions: Width 342px, Height 567.3px
+  - Grid Configuration: 2 columns x 3 rows
+  - Column Gap: 4px
+  - Row Gap: 4px
+  - Card Size: Width 169px, Height 186.4px
+  - Aspect Ratio: 169 / 186.4 (~0.9066)
+  - Overflow: Hidden
+  - Positioning: Relative
+
+Circular '+' Hotspot Buttons (Ellipse 451 & Group 1000008134)
+--------------------------------------------------------------------------------
+- Geometry & Dimensions:
+  * Desktop (Node 70:138): 22px width x 22px height, border-radius: 50%
+  * Mobile (Node 70:181): 15.7px x 15.7px (~16px), border-radius: 50%
+- Fill & Opacity:
+  * Background Color: #F8F8F8 (rgb: 248, 248, 248)
+  * Fill Opacity: 0.9 (90% opacity -> rgba(248, 248, 248, 0.9))
+- Border / Stroke:
+  * Stroke Weight: 1.35px inside stroke (or 1px solid rgba(0, 0, 0, 0.1))
+- Icon (Centered '+' Plus Mark):
+  * Desktop (Node 70:139): 8.5px width x 8.5px height (two perpendicular strokes)
+  * Mobile (Node 70:182): 6px width x 6px height
+  * Color: #000000 (Solid Black)
+  * Stroke Weight: 1.5px
+- Positioning & Interaction:
+  * CSS Position: Absolute
+  * z-index: 2
+  * transform: translate(-50%, -50%)
+  * Cursor: pointer
+  * Transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s ease
+  * Hover / Active State: scale(1.15), background-color: #FFFFFF
+
+Exact Coordinates for the 6 Cards in Figma:
+  * Card 1 (Image 822 / Node 3:1291 & 70:147):
+    - Desktop Pos: X = 256.5px, Y = 238px -> top: 53.6%, left: 59.2%
+    - Mobile Pos: X = 101.3px, Y = 18px -> top: 9.7%, left: 59.9%
+  * Card 2 (Image 823 / Node 3:1262 & 70:142):
+    - Desktop Pos: X = 355.5px, Y = 222px -> top: 50.0%, left: 82.1%
+    - Mobile Pos: X = 101.3px, Y = 18px -> top: 9.7%, left: 59.9%
+  * Card 3 (Image 824 / Node 3:1263 & 70:143):
+    - Desktop Pos: X = 261.0px, Y = 82px -> top: 18.5%, left: 60.3%
+    - Mobile Pos: X = 101.3px, Y = 19px -> top: 10.2%, left: 59.9%
+  * Card 4 (Image 825 / Node 3:1284 & 70:145):
+    - Desktop Pos: X = 301.5px, Y = 71px -> top: 16.0%, left: 69.6%
+    - Mobile Pos: X = 101.3px, Y = 19px -> top: 10.2%, left: 59.9%
+  * Card 5 (Image 826 / Node 3:1270 & 70:146):
+    - Desktop Pos: X = 212.5px, Y = 104px -> top: 23.4%, left: 49.1%
+    - Mobile Pos: X = 101.3px, Y = 18px -> top: 9.7%, left: 59.9%
+  * Card 6 (Image 827 / Node 3:1277 & 70:144):
+    - Desktop Pos: X = 319.5px, Y = 164px -> top: 36.9%, left: 73.8%
+    - Mobile Pos: X = 101.3px, Y = 18px -> top: 9.7%, left: 59.9%
+
+
+================================================================================
+7. QUICK VIEW MODAL POPUP (FRAME 1000009749)
+================================================================================
+
+Overall Modal Container (Node ID: 1:2266)
+--------------------------------------------------------------------------------
+- Dimensions: Width 311px, Height 447px
+- Background Color: #FFFFFF (Solid White)
+- Border: 1px solid #000000 (Black border)
+- Border Radius: 0px
+- Box Shadow: 0 10px 30px rgba(0, 0, 0, 0.15)
+- Padding: 20px
+- Positioning (Desktop): Positioned adjacent to clicked hotspot pin or centered overlay
+- Positioning (Mobile): Centered modal or bottom sheet (Width: min(340px, 92vw))
+
+Close Button: Group 1000008134 (Node IDs: 1:2289, 1:2290, 1:2291)
+--------------------------------------------------------------------------------
+- Placement: Absolute top-right (x: 278.8px, y: 21.2px)
+- Dimensions: 12px width x 12px height
+- Icon: "X" vector composed of two intersecting diagonal lines
+- Line Stroke: #000000 (Black), Stroke Weight: 1.5px
+- Hit Area: 32px x 32px for mobile accessibility
+- Cursor: Pointer
+
+Product Media & Info Layout (Top Section, Height ~140px)
+--------------------------------------------------------------------------------
+Left Column: Product Thumbnail (Image 846 / Node ID: 38:211)
+  - Dimensions: Width 120px, Height 140px
+  - Position: x: 17px, y: 36px
+  - Object Fit: cover
+  - Border: None
+
+Right Column: Product Metadata (Position: x: 145px, Width ~146px)
+  1. Product Title (Node ID: 1:2276):
+     * Content: Dynamic product title (Figma example: "Orange Wide Leg")
+     * Dimensions: Width 136px, Height 19px
+     * Position: x: 145px, y: 49px
+     * Typography:
+       - Font Family: 'Jost'
+       - Font Weight: 300 (Light / Postscript: JostRoman-Light)
+       - Font Size: 16px
+       - Line Height: 1.2 (19.2px)
+       - Color: #000000
+       - White-space: nowrap, text-overflow: ellipsis, overflow: hidden
+
+  2. Product Price (Node ID: 1:2275):
+     * Content: Dynamic variant price (Figma example: "980,00€")
+     * Dimensions: Width 64px, Height 19px
+     * Position: x: 145px, y: 90px
+     * Typography:
+       - Font Family: 'Lustria' (serif)
+       - Font Weight: 400 (Regular)
+       - Font Size: 16px
+       - Line Height: 1.2 (19.2px)
+       - Color: #000000
+
+  3. Product Description (Node ID: 1:2274):
+     * Content: Dynamic product description (Figma example: "This one-piece swimsuit is crafted from jersey featuring an allover micro Monogram motif in relief.")
+     * Dimensions: Width 146px, Height 52px
+     * Position: x: 145px, y: 122px
+     * Typography:
+       - Font Family: 'Jost'
+       - Font Weight: 300 (Light)
+       - Font Size: 12px
+       - Line Height: 1.1 (13.2px)
+       - Color: #000000
+       - Max Lines: 3-4 lines with line-clamp / ellipsis
+
+Color Swatch Selector: Component 211 (Node IDs: 103:336, 77:226, 77:227)
+--------------------------------------------------------------------------------
+- Placement: Position x: 20px, y: 186px
+- Dimensions: Width 271px, Total Height 64.5px
+
+1. Label: "Color" (Node ID: 77:214)
+   - Typography:
+     * Font Family: 'Jost'
+     * Font Weight: 400 (Regular)
+     * Font Size: 14px
+     * Line Height: 1.3 (18.2px)
+     * Color: #333333
+   - Margin Bottom: 6px
+
+2. Swatch Pill Bar Container (Node ID: 77:211 "Rectangle 18")
+   - Dimensions: Width 271px, Height 40.4px
+   - Background Fill: #FFFFFF
+   - Border: 1px solid #000000
+   - Border Radius: 0px
+   - Layout: Flexbox Row, split into 2 equal option halves (Width 135.5px each)
+
+3. Swatch Option Halves (Node IDs: 77:208, 77:209, 77:210, 77:212, 77:213):
+   - Option Width: 135.5px each (50%)
+   - Option Height: 40px
+   - Vertical Divider (Rectangle 26067): 1px solid #000000 between halves
+
+   * Active / Selected State:
+     - Background: #000000 (Solid Black, Rectangle 26170)
+     - Text Color: #FFFFFF (White)
+     - Typography: 'Jost Regular', Font Size: 18px (or 16px), Line Height: 1
+     - Left Color Indicator Stripe (Rectangle 26065):
+       * Dimensions: Width 5.8px, Height 40.4px
+       * Fill: Variant Color (e.g., Blue #0D499F, Red #B20F36, White #FFFFFF, Black #000000)
+       * Stroke: 1px solid #000000
+
+   * Inactive / Unselected State:
+     - Background: #FFFFFF (White)
+     - Text Color: #000000 (Black)
+     - Typography: 'Jost Regular', Font Size: 18px (or 16px), Line Height: 1
+     - Cursor: Pointer
+
+Custom Size Dropdown: Component 213 (Node IDs: 116:975, 116:553, 116:661)
+--------------------------------------------------------------------------------
+- Placement: Position x: 20px, y: 262px
+- Dimensions: Width 271px, Total Height 64.0px
+
+1. Label: "Size" (Node ID: 116:559)
+   - Typography:
+     * Font Family: 'Jost'
+     * Font Weight: 400 (Regular)
+     * Font Size: 14px
+     * Line Height: 1.3 (18.2px)
+     * Color: #333333
+   - Margin Bottom: 6px
+
+2. Closed Dropdown Field (Group 1000007962 / Node ID: 116:566):
+   - Dimensions: Width 271px, Height 40.4px
+   - Background Fill: #FFFFFF
+   - Border: 1px solid #000000
+   - Border Radius: 0px
+   - Layout: Flexbox Row, Space Between, Centered
+   - Text (Node ID: 116:564):
+     * Content: Selected size or "Choose your size"
+     * Font Family: 'Jost'
+     * Font Weight: 400 (Regular)
+     * Font Size: 16px
+     * Line Height: 1
+     * Color: #000000
+     * Padding Left: 13px
+   - Divider Line (Line 25 / Node ID: 116:563):
+     * Vertical divider at x: 216px (Width: 1px, Height: 39.7px, Stroke: #000000)
+     * Separates the text section (216px wide) from the chevron section (55px wide)
+   - Chevron Down Icon (Vector / Node ID: 116:571):
+     * Position: Centered in the 55px right section (x: 238px, y: 42px)
+     * Dimensions: Width 12px, Height 6px
+     * Stroke: #000000, Stroke Weight: 1.5px
+     * Transition: transform 0.2s ease (rotates 180deg when dropdown is open)
+
+3. Expanded Dropdown Menu: Variant 8 / Frame 1000009761 (Node ID: 116:662):
+   - Placement: Positioned directly below the dropdown field (top: 100%, left: 0)
+   - Dimensions: Width 271px, Max Height: 182px (scrollable if >5 options)
+   - Background Fill: #FFFFFF
+   - Border: 1px solid #000000
+   - Border Radius: 0px
+   - Z-Index: 10
+   - Option Rows: Component 212 (Node IDs: 116:530, 116:531, 116:663 - 116:667)
+     * Row Dimensions: Width 271px, Height 36px per option
+     * Typography:
+       - Font Family: 'Jost'
+       - Font Weight: 400 (Regular)
+       - Font Size: 16px
+       - Line Height: 1
+       - Padding Left: 18px
+     * Default State: Background #FFFFFF, Text Color #000000
+     * Hover / Selected State: Background #000000, Text Color #FFFFFF
+     * Cursor: Pointer
+
+"ADD TO CART" Button: Group 1000007810 (Node IDs: 1:2292, 1:2293, 1:2294, 1:2295)
+--------------------------------------------------------------------------------
+- Placement: Position x: 20px, y: 377px
+- Dimensions: Width 271px, Height 45px
+- Auto Layout / Flexbox: Centered content with right-aligned arrow
+- Initial State:
+  * Background Color: #000000 (Solid Black, Rectangle 26035)
+  * Border: 1px solid #000000
+  * Border Radius: 0px
+  * Button Text (Node ID: 1:2295):
+    - Content: "ADD TO CART" (or "Add to cart")
+    - Font Family: 'Jost'
+    - Font Weight: 400 (Regular)
+    - Font Size: 16px
+    - Line Height: 20.48px
+    - Text Transform: Uppercase
+    - Letter Spacing: 0.05em
+    - Color: #FFFFFF (Solid White)
+  * Arrow Icon (Line 15 / Node ID: 1:2294):
+    - Width: 33.7px
+    - Stroke: #FFFFFF (Solid White), Stroke Weight: 1.5px
+    - Arrowhead: Right-pointing acute angle
+- Hover State (Component 207 Hover Mechanic):
+  * Sliding ::before Fill: #FFF544 (Bright Accent Yellow) sliding in from left to right
+  * Transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)
+  * Button Text Color: Inverts smoothly to #000000 (Black)
+  * Arrow Icon Stroke: Inverts smoothly to #000000 (Black)
+- Loading & Sold Out States:
+  * Sold Out: Background #E0E0E0, Text #888888, Border #E0E0E0, cursor not-allowed, text "SOLD OUT"
+  * Loading: Spinner or "ADDING..." with opacity 0.8
+
+
+================================================================================
+8. INTERACTION & STATE LOGIC
+================================================================================
+
+1. Hotspot Pin Interaction:
+   - Clicking a '+' hotspot opens the Quick View modal for that specific product.
+   - On Desktop: The modal appears anchored near the hotspot or in an adjacent flyout with smooth fade/scale transition (opacity: 0 -> 1, transform: scale(0.95) -> scale(1)).
+   - On Mobile: The modal opens as a centered or bottom sheet popup with a dark backdrop (rgba(0, 0, 0, 0.5)).
+
+2. Close Modal Interaction:
+   - Clicking the "X" button (top-right) closes the modal.
+   - Clicking outside the modal container (on the backdrop overlay) closes the modal.
+   - Pressing the Escape key on keyboard closes the modal.
+
+3. Color Swatch Switching:
+   - Clicking an unselected color swatch toggles it to active (black pill background, white text).
+   - Updates the internal selected variant ID.
+   - Updates the thumbnail image, price, and availability based on the chosen color + currently selected size.
+
+4. Size Dropdown Interaction:
+   - Clicking the size box toggles the custom dropdown menu open/closed (rotate(180deg) on chevron).
+   - Clicking a size option selects it, closes the menu, and updates the displayed size text.
+   - Clicking outside the dropdown closes the dropdown menu.
+   - Re-evaluates variant availability and price for the chosen size + color combination.
+
+5. Add to Cart AJAX Submission:
+   - Submits POST /cart/add.js with the selected variant ID and quantity 1 via fetch.
+   - On success: Dispatches Shopify theme cart event / opens Dawn's cart drawer (cart-drawer or custom notification) and shows a brief success state ("ADDED!").
+   - On error: Displays the error message inside the modal (e.g. "Sold out" or inventory limitation).
