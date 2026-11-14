@@ -97,26 +97,26 @@
         "top_bar_tagline": "Find the ideal gift for your loved ones.",
         "top_bar_btn_label": "CHOOSE GIFT",
         "top_bar_btn_link": "",
-        "top_bar_bg_color": "#F5F5F5",
+        "top_bar_bg_color": "#f5f5f5",
         "top_bar_text_color": "#000000",
-        "top_bar_btn_bg_color": "#FFF544",
+        "top_bar_btn_bg_color": "#fff544",
         "top_bar_btn_text_color": "#000000",
         "top_bar_btn_hover_bg": "#000000",
-        "top_bar_btn_hover_text": "#FFFFFF",
+        "top_bar_btn_hover_text": "#ffffff",
         "heading": "The Gift Guide",
         "description": "Discover Joy: Your Ultimate Holiday Gift Destination. Explore our curated selection and find the perfect gifts to delight your loved ones this holiday season.",
         "hero_btn_label": "SHOP NOW",
         "hero_btn_link": "",
-        "hero_bg_color": "#FFFFFF",
+        "hero_bg_color": "#ffffff",
         "hero_heading_color": "#000000",
         "hero_text_color": "#000000",
         "hero_btn_bg_color": "#000000",
-        "hero_btn_text_color": "#F5F5F5",
-        "hero_btn_hover_bg": "#FFF544",
+        "hero_btn_text_color": "#f5f5f5",
+        "hero_btn_hover_bg": "#fff544",
         "hero_btn_hover_text": "#000000",
         "enable_announcement": true,
         "announcement_text": "SUSTAINABLE, ETHICALLY MADE CLOTHES IN SIZES XXS TO 6XL",
-        "announcement_bg_color": "#F5F5F5",
+        "announcement_bg_color": "#f5f5f5",
         "announcement_text_color": "#000000"
       }
     },
@@ -126,7 +126,7 @@
         "product_card_edND6H": {
           "type": "product_card",
           "settings": {
-            "product": "",
+            "product": "black-leather-bag",
             "hotspot_top": 54,
             "hotspot_left": 59
           }
@@ -134,7 +134,7 @@
         "product_card_JqYX7j": {
           "type": "product_card",
           "settings": {
-            "product": "",
+            "product": "blue-silk-tuxedo",
             "hotspot_top": 29,
             "hotspot_left": 72
           }
@@ -142,7 +142,7 @@
         "product_card_9CCjyX": {
           "type": "product_card",
           "settings": {
-            "product": "",
+            "product": "chequered-red-shirt",
             "hotspot_top": 18,
             "hotspot_left": 60
           }
@@ -150,7 +150,7 @@
         "product_card_Ata4Lm": {
           "type": "product_card",
           "settings": {
-            "product": "",
+            "product": "classic-leather-jacket",
             "hotspot_top": 16,
             "hotspot_left": 70
           }
@@ -158,7 +158,7 @@
         "product_card_xhcWkN": {
           "type": "product_card",
           "settings": {
-            "product": "",
+            "product": "classic-varsity-top",
             "hotspot_top": 23,
             "hotspot_left": 49
           }
@@ -166,7 +166,7 @@
         "product_card_RiC8dW": {
           "type": "product_card",
           "settings": {
-            "product": "",
+            "product": "dark-denim-top",
             "hotspot_top": 37,
             "hotspot_left": 74
           }
