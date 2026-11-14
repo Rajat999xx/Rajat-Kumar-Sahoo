@@ -1,0 +1,362 @@
+{% comment %}
+  Custom Product Grid Section ("Tisso vison in the wild")
+  Pixel-perfect implementation from Figma design:
+  - Heading matching Figma Lustria typography
+  - 3x2 Grid on Desktop (gap: 20px)
+  - 2x3 Grid on Mobile (gap: 4px)
+  - Interactive circular '+' Hotspot buttons with top/left range positioning
+{% endcomment %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lustria&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+
+{%- style -%}
+  #CustomProductGrid-{{ section.id }} {
+    --cpg-heading-font: 'Lustria', Georgia, serif;
+    --cpg-body-font: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
+    --cpg-bg-color: #FFFFFF;
+    --cpg-text-color: #000000;
+    --cpg-hotspot-bg: rgba(248, 248, 248, 0.9);
+    --cpg-hotspot-icon-color: #000000;
+
+    font-family: var(--cpg-body-font);
+    background-color: var(--cpg-bg-color);
+    color: var(--cpg-text-color);
+    width: 100%;
+    padding: 80px 0 100px;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #CustomProductGrid-{{ section.id }} *,
+  #CustomProductGrid-{{ section.id }} *::before,
+  #CustomProductGrid-{{ section.id }} *::after {
+    box-sizing: border-box;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 50px;
+  }
+
+  /* Section Heading */
+  #CustomProductGrid-{{ section.id }} .cpg-heading {
+    font-family: var(--cpg-heading-font);
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--cpg-text-color);
+    margin: 0 0 30px 0;
+    letter-spacing: -0.01em;
+    text-align: left;
+  }
+
+  /* 3x2 CSS Grid on Desktop */
+  #CustomProductGrid-{{ section.id }} .cpg-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 20px;
+    row-gap: 20px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Product Card Container */
+  #CustomProductGrid-{{ section.id }} .cpg-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 433 / 444;
+    overflow: hidden;
+    background-color: #F5F5F5;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-card__media {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-card:hover .cpg-card__img {
+    transform: scale(1.03);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-card__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #EFEFEF;
+    color: #999999;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-card__placeholder svg {
+    width: 40%;
+    height: 40%;
+    opacity: 0.5;
+  }
+
+  /* Circular Hotspot Button (+) */
+  #CustomProductGrid-{{ section.id }} .cpg-hotspot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: var(--cpg-hotspot-bg);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+                background-color 0.25s ease,
+                box-shadow 0.25s ease;
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-hotspot:hover {
+    transform: translate(-50%, -50%) scale(1.18);
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  }
+
+  #CustomProductGrid-{{ section.id }} .cpg-hotspot svg {
+    width: 9px;
+    height: 9px;
+    display: block;
+    stroke: var(--cpg-hotspot-icon-color);
+  }
+
+  /* Responsive Breakpoints */
+  @media screen and (max-width: 1024px) {
+    #CustomProductGrid-{{ section.id }} {
+      padding: 60px 0 80px;
+    }
+
+    #CustomProductGrid-{{ section.id }} .cpg-container {
+      padding: 0 30px;
+    }
+
+    #CustomProductGrid-{{ section.id }} .cpg-heading {
+      font-size: 30px;
+      margin-bottom: 24px;
+    }
+
+    #CustomProductGrid-{{ section.id }} .cpg-grid {
+      column-gap: 14px;
+      row-gap: 14px;
+    }
+  }
+
+  /* 2x3 Grid on Mobile */
+  @media screen and (max-width: 767px) {
+    #CustomProductGrid-{{ section.id }} {
+      padding: 40px 0 60px;
+    }
+
+    #CustomProductGrid-{{ section.id }} .cpg-container {
+      padding: 0 16px;
+    }
+
+    #CustomProductGrid-{{ section.id }} .cpg-heading {
+      font-size: 24px;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #CustomProductGrid-{{ section.id }} .cpg-grid {
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: 4px;
+      row-gap: 4px;
+    }
+
+    #CustomProductGrid-{{ section.id }} .cpg-card {
+      aspect-ratio: 169 / 186;
+    }
+
+    #CustomProductGrid-{{ section.id }} .cpg-hotspot {
+      width: 16px;
+      height: 16px;
+    }
+
+    #CustomProductGrid-{{ section.id }} .cpg-hotspot svg {
+      width: 6px;
+      height: 6px;
+    }
+  }
+{%- endstyle -%}
+
+<section id="CustomProductGrid-{{ section.id }}" class="custom-product-grid" {{ section.shopify_attributes }}>
+  <div class="cpg-container">
+    {%- if section.settings.heading != blank -%}
+      <h2 class="cpg-heading">
+        {{ section.settings.heading }}
+      </h2>
+    {%- endif -%}
+
+    <div class="cpg-grid" role="list">
+      {%- for block in section.blocks -%}
+        {%- assign card_product = block.settings.product -%}
+
+        <div class="cpg-card" role="listitem" {{ block.shopify_attributes }}>
+          <div class="cpg-card__media">
+            {%- if card_product != blank and card_product.featured_media != blank -%}
+              <img
+                src="{{ card_product.featured_media | image_url: width: 900 }}"
+                alt="{{ card_product.featured_media.alt | default: card_product.title | escape }}"
+                class="cpg-card__img"
+                loading="lazy"
+                width="433"
+                height="444"
+              >
+            {%- elsif card_product != blank and card_product.images.size > 0 -%}
+              <img
+                src="{{ card_product.images.first | image_url: width: 900 }}"
+                alt="{{ card_product.title | escape }}"
+                class="cpg-card__img"
+                loading="lazy"
+                width="433"
+                height="444"
+              >
+            {%- else -%}
+              {%- comment -%} Fallback placeholder when no product is selected {%- endcomment -%}
+              <div class="cpg-card__placeholder">
+                {{ 'product-apparel-' | append: forloop.index | placeholder_svg_tag: 'placeholder-svg' }}
+              </div>
+            {%- endif -%}
+
+            {%- comment -%} Circular Hotspot Button (+) {%- endcomment -%}
+            <button
+              type="button"
+              class="cpg-hotspot"
+              style="top: {{ block.settings.hotspot_top }}%; left: {{ block.settings.hotspot_left }}%;"
+              aria-label="View product details{% if card_product != blank %}: {{ card_product.title | escape }}{% endif %}"
+            >
+              <svg viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M5 1V9M1 5H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Custom Product Grid",
+  "tag": "section",
+  "class": "section-custom-product-grid",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Tisso vison in the wild"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product_card",
+      "name": "Product Card",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        },
+        {
+          "type": "range",
+          "id": "hotspot_top",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%",
+          "label": "Hotspot Vertical Position (Top)",
+          "default": 50
+        },
+        {
+          "type": "range",
+          "id": "hotspot_left",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "%",
+          "label": "Hotspot Horizontal Position (Left)",
+          "default": 50
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Product Grid",
+      "blocks": [
+        {
+          "type": "product_card",
+          "settings": {
+            "hotspot_top": 54,
+            "hotspot_left": 59
+          }
+        },
+        {
+          "type": "product_card",
+          "settings": {
+            "hotspot_top": 50,
+            "hotspot_left": 82
+          }
+        },
+        {
+          "type": "product_card",
+          "settings": {
+            "hotspot_top": 18,
+            "hotspot_left": 60
+          }
+        },
+        {
+          "type": "product_card",
+          "settings": {
+            "hotspot_top": 16,
+            "hotspot_left": 70
+          }
+        },
+        {
+          "type": "product_card",
+          "settings": {
+            "hotspot_top": 23,
+            "hotspot_left": 49
+          }
+        },
+        {
+          "type": "product_card",
+          "settings": {
+            "hotspot_top": 37,
+            "hotspot_left": 74
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
