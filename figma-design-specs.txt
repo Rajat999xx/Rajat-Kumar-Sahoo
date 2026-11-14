@@ -1,0 +1,295 @@
+FIGMA DESIGN BREAKDOWN & INSPECTION REPORT
+File: Test for Candidates (Figma URL: https://www.figma.com/design/p0OuoQgeetLtfOdrKFYWiM/Test-for-Candidates?node-id=0-1)
+Inspected Nodes: Desktop Frame (1:1588 "Desktop - 22"), Mobile Frame (1:1802 "Home page:M ")
+
+================================================================================
+1. TOP BAR / HEADER BANNER
+================================================================================
+
+[DESKTOP] Frame 1956 (Node ID: 1:1590)
+--------------------------------------------------------------------------------
+- Dimensions: Width 1440px, Height 64px
+- Background Color: #F5F5F5 (rgb: 245, 245, 245)
+- Layout: Horizontal Auto Layout / Flexbox Row
+  - Alignment: Center
+  - Justification: Space Between (Spread across columns)
+  - Padding: Top 10px, Bottom 10px, Left 50px, Right 50px
+  - Spacing/Gap: 360px (distributed)
+- Border: 1px solid rgba(0, 0, 0, 0.05) bottom border
+
+Column 1: Brand Logo (Group 1000007777 / Node IDs: 1:1591, 1:1592, 1:1598)
+  - Dimensions: Width 151.44px, Height 19px
+  - Wordmark: "TISSO VISON"
+  - Structure:
+    * "TISSO" (Group 1000007775): Width 74.79px, Height 19px (5 vector glyphs)
+    * "VISON" (Group 1000007776): Width 64.31px, Height 18.82px (5 vector glyphs)
+  - Color: #000000 (Black)
+  - Fallback Typography: Font Family 'Jost', Weight 700 (Bold), Letter-Spacing 0.18em
+
+Column 2: Tagline (Node ID: 1:1604)
+  - Dimensions: Width 260px, Height 14px
+  - Text: "Find the ideal gift for your loved ones."
+  - Typography:
+    * Font Family: 'Jost'
+    * Font Weight: 400 (Regular / Postscript: JostRoman-Regular)
+    * Font Size: 16px
+    * Line Height: 1.2 (13.42px / RAW)
+    * Letter Spacing: 0px
+    * Text Align: Center
+    * Color: #000000 (Solid Black)
+
+Column 3: CTA Button (Component 207 / Group 1000007810 / Node ID: 1:1605)
+  - Default State (Property 1=Group 1000007810 / Node ID: 1:1228):
+    * Dimensions: Width 207px (Instance) / 220px (Master Symbol), Height 44px (Instance) / 50px (Master)
+    * Background Fill: #FFF544 (Bright Pastel Yellow, Rectangle 26036)
+    * Border: 1px solid #000000 (Rectangle 26035)
+    * Border Radius: 0px
+    * Text (Node ID: 1:1232): "CHOOSE GIFT" (Figma text override: "choose yours")
+      - Font Family: 'Jost'
+      - Font Weight: 400 (Regular)
+      - Font Size: 16px
+      - Line Height: 20.48px
+      - Text Transform: Uppercase
+      - Letter Spacing: 0.06em
+      - Color: #000000 (Black)
+    * Arrow Icon (Node ID: 1:1231 "Line 15"):
+      - Vector Line with Right Arrow Tip (StrokeCap: ARROW_LINES, SQUARE)
+      - Width: 25.5px - 26px, Height: 0px (Stroke Weight: 1.5px)
+      - Color: #000000 (Black)
+  - Hover State (Property 1=Group 1000008196 / Node ID: 1:1233):
+    * Background Fill: Slides in from left to right with #000000 (Black)
+    * Text Color: Inverts smoothly to #FFFFFF (White)
+    * Arrow Color: Inverts smoothly to #FFFFFF (White)
+    * Border: #000000
+
+
+[MOBILE] Component 189 (Node IDs: 1:1804, 1:2226)
+--------------------------------------------------------------------------------
+- Collapsed State (Property 1=Frame 1000008091 / Node ID: 1:2227):
+  * Dimensions: Width 375.44px, Height 65px
+  * Background Color: #F7F7F7 (or #F5F5F5)
+  * Layout: Horizontal Auto Layout, Alignment Center, Justification Space Between
+  * Padding: Left 20px, Right 20px (Figma internal: Padding Right 112px, Bottom 23px)
+  * Hamburger Icon (Group 1000008115 / Node IDs: 1:2228 - 1:2231):
+    - Dimensions: Width 18px, Height 10px - 12px
+    - 3 Horizontal Lines: Width 18px each, Stroke/Fill #000000
+    - Position: Left-aligned
+  * Brand Logo (Group 1000007858 / Node ID: 1:2232):
+    - "TISSO VISON" vector logo (Width 151.44px, Height 19px)
+    - Position: Center-aligned
+
+- Expanded State (Property 1=Group 1000008120 / Node ID: 1:2245):
+  * Total Height: 189px
+  * Top Bar: Height 65px, Background #F7F7F7
+    - Close Icon (Group 1000008115 / Node IDs: 1:2250 - 1:2252):
+      * "X" Close mark composed of 2 intersecting lines (Width 12.73px, Height 13.00px, Color #000000)
+    - Brand Logo: "TISSO VISON" centered
+  * Collapsible Drawer (Frame 1000008094 / Node ID: 1:2246):
+    - Dimensions: Width 375px (or 391px), Height 124px
+    - Background Color: #F2F2F2
+    - Layout: Vertical Auto Layout (Stack Mode: VERTICAL, Gap: 16px)
+    - Padding: Top 20px, Bottom 25px, Left 20px, Right 20px
+    - Alignment: Center
+    - Tagline (Node ID: 1:2247):
+      * Text: "Find the ideal gift for your loved ones."
+      * Font: 'Jost Regular', Size: 16px, Line Height: 1.35, Color: #000000, Text Align: Center
+    - Button (Instance Group 1000008106 / Node ID: 1:2248):
+      * Width: 244px - 280px (responsive), Height: 44px
+      * Background: #FFF544 (Yellow), Border: 1px solid #000000
+      * Text: "CHOOSE GIFT →"
+      * Hover State: Left-to-right sliding black fill (#000000) with white text
+
+
+================================================================================
+2. MAIN HERO AREA
+================================================================================
+
+[DESKTOP] Group 1000007949 (Node ID: 3:1125)
+--------------------------------------------------------------------------------
+- Dimensions: Width 1440px, Height 780px
+- Background Color: #FFFFFF (Solid White, Rectangles 26167 & 26168 / Node IDs: 3:1126, 3:1205)
+- Layout: Relative positioning with full-bleed illustration and bottom-left content box
+
+Background Illustration (Group 1000008197 / Node ID: 8593:227):
+  - Dimensions: Width 1440px, Height 780px
+  - Composition: Line-art holiday gift illustration comprising 38+ vector path nodes
+    * Frame 1 (Node ID: 3:1127): 1440 × 390px, fill #000000 vectors
+    * Frame 2 (Node ID: 3:1166): 890 × 402px, fill #000000 vectors
+  - Placement: Positioned across top-right and center-right of the hero canvas
+
+Content Box (Bottom-Left Positioned):
+  - Coordinates: X = 67px, Y = 425px (from top of hero), Bottom Offset ~60px
+  - Max Width: 500px - 520px
+
+  1. Heading: "The Gift Guide" (Node ID: 3:1207)
+     - Dimensions: Width 459px, Height 70px
+     - Typography:
+       * Font Family: 'Jost'
+       * Font Weight: 500 (Medium / Postscript: JostRoman-Medium)
+       * Font Size: 70px
+       * Line Height: 1 (70px / RAW: 1.0)
+       * Letter Spacing: 0px
+       * Color: #000000 (Black)
+     - Margin Bottom: 24px
+
+  2. Description Text (Node ID: 3:1208)
+     - Dimensions: Width 483px, Height 84px
+     - Content: "Discover Joy: Your Ultimate Holiday Gift Destination. Explore our curated selection and find the perfect gifts to delight your loved ones this holiday season."
+     - Typography:
+       * Font Family: 'Jost'
+       * Font Weight: 400 (Regular / Postscript: JostRoman-Regular)
+       * Font Size: 20px
+       * Line Height: 1.4 (28px / RAW: 1.399999976158142)
+       * Letter Spacing: 0px
+       * Color: #000000 (Black)
+     - Margin Bottom: 32px
+
+  3. CTA Button: "SHOP NOW →" (Component 206 / Node IDs: 3:1209, 3:1214)
+     - Default State (Property 1=Frame 1949 / Node ID: 3:1215):
+       * Dimensions: Width 220px, Height 50px
+       * Coordinates: X = 67px, Y = 679px
+       * Background Fill: #000000 (Solid Black, Rectangle 26035)
+       * Border: 1px solid #000000
+       * Border Radius: 0px
+       * Text (Node ID: 3:1220): "SHOP NOW" (Figma text: "Shop now")
+         - Font Family: 'Jost'
+         - Font Weight: 400 (Regular)
+         - Font Size: 16px
+         - Line Height: 20.48px
+         - Text Transform: Uppercase
+         - Color: #F5F5F5 (Light White / Gray)
+       * Arrow Icon (Node ID: 3:1219 "Line 15"):
+         - Width: 27px, Height: 0px (StrokeCap: ARROW_LINES, SQUARE)
+         - Stroke/Fill: #F5F5F5 (Light White / Gray)
+     - Hover State (Property 1=Frame 1950 / Node ID: 3:1221):
+       * Background Fill: Slides in from left to right with #FFF544 (Bright Yellow, Rectangle 26036)
+       * Text Color: Inverts smoothly to #000000 (Black)
+       * Arrow Color: Inverts smoothly to #000000 (Black)
+       * Border: 1px solid #000000
+
+
+[MOBILE] Frame 1958 (Node ID: 3:1629)
+--------------------------------------------------------------------------------
+- Dimensions: Width 375px, Height 421px
+- Background Color: #FFFFFF (White)
+- Layout: Stacked vertically (Illustration on top, content box below)
+
+Background Illustration (Frame / Node ID: 3:1630):
+  - Dimensions: Width 686px, Height 264px
+  - Height on Mobile Screen: ~240px - 260px
+  - Composition: 38 scaled vector paths matching desktop line art, centered horizontally
+
+Content Box (Stacked Below Illustration):
+  - Padding: 24px 20px 36px
+  - Alignment: Left-aligned (align-items: flex-start)
+
+  1. Heading: "The Gift Guide" (Node ID: 3:1669)
+     - Dimensions: Width 197px, Height 30px
+     - Typography:
+       * Font Family: 'Jost'
+       * Font Weight: 500 (Medium)
+       * Font Size: 30px
+       * Line Height: 1 (30px)
+       * Color: #000000
+     - Margin Bottom: 12px
+
+  2. Description Text (Node ID: 3:1670)
+     - Dimensions: Width 340px, Height 42px
+     - Content: "Discover Joy: Your Ultimate Holiday Gift Destination. Explore our curated selection and find the perfect gifts to delight your loved ones this holiday season."
+     - Typography:
+       * Font Family: 'Jost'
+       * Font Weight: 400 (Regular)
+       * Font Size: 16px
+       * Line Height: 1.3 - 1.35 (21px / RAW: 1.2999999523162842)
+       * Color: #000000
+     - Margin Bottom: 24px
+
+  3. CTA Button: "SHOP NOW →" (Frame 1000008095 / Node ID: 3:1671)
+     - Dimensions: Width 193px (or max-width 240px), Height 45px
+     - Auto Layout: Horizontal (Gap: 10px, Padding Right: 20px, Bottom: 13px)
+     - Background: #000000 (Black)
+     - Text (Node ID: 3:1672): "Shop Now" (Font: 'Jost Regular', Size: 16px, Color: #F5F5F5)
+     - Arrow (Node ID: 3:1673): Line 15 (Width: 24px, Color: #F5F5F5)
+     - Hover State: Slides in with #FFF544 yellow fill and turns text/arrow to #000000
+
+
+================================================================================
+3. BUTTON HOVER ANIMATION SPECIFICATIONS (PURE CSS)
+================================================================================
+
+Mechanic:
+- Implementation uses a ::before pseudo-element with transition on `transform: scaleX(0)` to `scaleX(1)`.
+- `transform-origin: left center` ensures smooth left-to-right sliding fill effect.
+- Timing Function: `cubic-bezier(0.25, 1, 0.5, 1)` for 0.35s duration.
+
+1. "CHOOSE GIFT →" Button:
+   - Initial State:
+     * Background Color: #FFF544 (Yellow)
+     * Text & Arrow Color: #000000 (Black)
+     * Border: 1px solid #000000
+   - Hover State:
+     * Sliding ::before Fill: #000000 (Black)
+     * Text & Arrow Color: #FFFFFF (White)
+
+2. "SHOP NOW →" Button:
+   - Initial State:
+     * Background Color: #000000 (Black)
+     * Text & Arrow Color: #F5F5F5 (White / Light)
+     * Border: 1px solid #000000
+   - Hover State:
+     * Sliding ::before Fill: #FFF544 (Yellow)
+     * Text & Arrow Color: #000000 (Black)
+
+
+================================================================================
+4. BOTTOM ANNOUNCEMENT STRIP
+================================================================================
+
+[DESKTOP] Frame 1957 (Node ID: 1:1612)
+--------------------------------------------------------------------------------
+- Dimensions: Width 1440px, Height 34px
+- Background Color: #F5F5F5 (rgb: 245, 245, 245)
+- Border: 1px solid rgba(0, 0, 0, 0.05) top border
+- Layout: Horizontal Auto Layout, Centered
+  - Padding: Top 10px, Bottom 10px, Left 50px, Right 50px
+  - Justification: Center
+- Text (Node ID: 1:1613):
+  * Content: "SUSTAINABLE, ETHICALLY MADE CLOTHES IN SIZES XXS TO 6XL"
+  * Dimensions: Width 451px, Height 14px
+  * Typography:
+    - Font Family: 'Jost'
+    - Font Weight: 400 (Regular)
+    - Font Size: 16px
+    - Line Height: 1.2 (13.42px / RAW)
+    - Letter Spacing: 0.03em
+    - Text Transform: Uppercase
+    - Text Align: Center
+    - Color: #000000 (Solid Black)
+
+[MOBILE] Frame 1957 (Node ID: 1:1812)
+--------------------------------------------------------------------------------
+- Dimensions: Width 375px, Height 34px
+- Background Color: #F5F5F5
+- Layout: Centered flex row, padding 0 20px
+- Text (Node ID: 1:1813):
+  * Content: "SUSTAINABLE, ETHICALLY MADE CLOTHES IN SIZES XXS TO 6XL" (Figma variant text: "SUSTAINABLE, ETHICALLY MADE ACTIVEWEAR")
+  * Typography:
+    - Font Family: 'Jost'
+    - Font Weight: 400 (Regular)
+    - Font Size: 14px
+    - Letter Spacing: 0.02em
+    - Text Transform: Uppercase
+    - Text Align: Center
+    - Color: #000000
+
+
+================================================================================
+5. COLOR PALETTE REFERENCE
+================================================================================
+- #FFFFFF (rgb: 255, 255, 255) : Hero Background & Canvas
+- #F5F5F5 (rgb: 245, 245, 245) : Top Header Bar Background & Bottom Announcement Strip
+- #F7F7F7 (rgb: 247, 247, 247) : Mobile Top Bar Header
+- #F2F2F2 (rgb: 242, 242, 242) : Mobile Collapsible Drawer Dropdown Background
+- #FFF544 (rgb: 255, 245, 68)  : Primary Accent Yellow (Choose Gift Button & Shop Now Hover Fill)
+- #000000 (rgb: 0, 0, 0)       : Primary Text, Borders, Line Art Vectors, Shop Now Button Background
+- rgba(0, 0, 0, 0.05)          : Subtle Section Dividers / Borders
