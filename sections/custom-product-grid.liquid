@@ -748,6 +748,7 @@
     height: 40px;
     margin: 0;
     padding: 0;
+    overflow: hidden;
     background-color: #ffffff;
     border: 1px solid #000000;
     border-radius: 0;
@@ -832,9 +833,8 @@
     position: absolute;
     top: 100%;
     left: 0;
-    right: 0;
     z-index: 10;
-    width: auto;
+    width: 100%;
     height: 99px;
     max-height: 99px;
     margin: -1px 0 0;
@@ -1430,6 +1430,8 @@
 
       this.colorOptions.replaceChildren();
       this.sizeMenu.replaceChildren();
+      this.sizeMenu.style.width = '';
+      this.sizeMenu.style.left = '';
       this.colorSection.hidden = true;
       this.sizeSection.hidden = true;
       this.sizeValue.textContent = 'Choose your size';
@@ -1880,6 +1882,31 @@
       }
     }
 
+    syncSizeMenuGeometry() {
+      if (!this.sizeMenu || this.sizeMenu.hidden) return;
+
+      const triggerRect = this.sizeTrigger.getBoundingClientRect();
+      if (!triggerRect.width) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      // In Chromium / Blink, absolutely positioned layers calculate used width via
+      // floor(width * dpr), which renders 1 physical device pixel narrower than
+      // in-flow button/block borders that snap to round(left + width * dpr).
+      // Adding exactly 1 device pixel (1 / dpr) guarantees the right border aligns
+      // seamlessly with the trigger button and the Add to Cart button on high-DPI screens.
+      const devicePixelCompensation = dpr > 1 ? (1 / dpr) : 0;
+
+      this.sizeMenu.style.left = '0px';
+      this.sizeMenu.style.width = `${triggerRect.width + devicePixelCompensation}px`;
+
+      // Read back live rect: if any sub-pixel right delta remains, compensate it
+      const menuRect = this.sizeMenu.getBoundingClientRect();
+      const rightDelta = triggerRect.right - menuRect.right;
+      if (rightDelta > 0.05) {
+        this.sizeMenu.style.width = `${parseFloat(this.sizeMenu.style.width) + rightDelta}px`;
+      }
+    }
+
     openSizeMenu(focusLast = false) {
       if (!this.sizeOptions.length) return;
 
@@ -1888,6 +1915,8 @@
       this.sizeSelect.classList.add('is-open');
 
       this.sizeSelect.classList.remove('is-dropup');
+      this.syncSizeMenuGeometry();
+
       const triggerRect = this.sizeTrigger.getBoundingClientRect();
       const menuHeight = Math.min(this.sizeMenu.scrollHeight || 99, 99);
       const spaceBelow = window.innerHeight - triggerRect.bottom;
@@ -1897,11 +1926,14 @@
         this.sizeSelect.classList.add('is-dropup');
       }
 
-      if (focusLast) {
-        const options = this.sizeOptions;
-        const target = options[options.length - 1];
-        window.requestAnimationFrame(() => target?.focus());
-      }
+      window.requestAnimationFrame(() => {
+        this.syncSizeMenuGeometry();
+        if (focusLast) {
+          const options = this.sizeOptions;
+          const target = options[options.length - 1];
+          target?.focus();
+        }
+      });
 
       this.dropdownAbort?.abort();
       this.dropdownAbort = new AbortController();
@@ -1909,6 +1941,13 @@
         capture: true,
         signal: this.dropdownAbort.signal,
       });
+      window.addEventListener(
+        'resize',
+        () => {
+          this.syncSizeMenuGeometry();
+        },
+        { signal: this.dropdownAbort.signal }
+      );
     }
 
     closeSizeMenu(focusTrigger = false) {
