@@ -1,20 +1,15 @@
 {% comment %}
   Section contract.
-  Renders the "Tisso vison in the wild" product grid: a 3 x 2 desktop / 2 x 3
-  mobile image grid with a circular quick-view hotspot on every card and a
-  shared quick-view dialog.
+  Renders a responsive product grid with one shared quick-view dialog. Each
+  card carries its own product payload in a hidden data node, so opening the
+  dialog requires no additional product request.
 
-  Each card owns its complete product data in a hidden container, so the dialog
-  can render titles, prices, descriptions, images, and real option values
-  without relying on `product | json` (which drops some fields).
-
-  The dialog renders Color and Size controls from the product's real options.
-  Choosing Black (or black) with M (or Medium) also adds the bonus product
-  selected in the section settings.
+  The dialog derives color and size controls from the product's real options.
+  Color: Black plus Size: M or Medium adds the section's bonus product; a blank
+  bonus product setting disables that rule for this section.
 
   @example
-  <!-- Add the section to a JSON template, assign products to its blocks, and
-       optionally choose a bonus product for the Black + Medium rule. -->
+  <!-- Add the section to a JSON template and assign products to its blocks. -->
 {% endcomment %}
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,19 +21,40 @@
 
 {% liquid
   assign bonus_product = section.settings.bonus_product
-  if bonus_product == blank
-    assign bonus_product = all_products['dark-winter-jacket']
-  endif
-  assign bonus_variant = bonus_product.selected_or_first_available_variant
-  for variant in bonus_product.variants
-    if variant.available
-      assign title_lower = variant.title | downcase
-      if title_lower contains 'black' and title_lower contains 'm'
-        assign bonus_variant = variant
-        break
+  assign bonus_variant = nil
+  assign bonus_available = false
+
+  if bonus_product != blank
+    for variant in bonus_product.variants
+      if variant.available
+        assign variant_color = ''
+        assign variant_size = ''
+
+        for option in variant.options_with_values
+          assign option_name = option.name | downcase | strip
+          assign option_value = option.value | downcase | strip
+
+          if option_name == 'color' or option_name == 'colour'
+            assign variant_color = option_value
+          elsif option_name == 'size'
+            assign variant_size = option_value
+          endif
+        endfor
+
+        if variant_color == 'black'
+          if variant_size == 'm' or variant_size == 'medium'
+            assign bonus_variant = variant
+            break
+          endif
+        endif
       endif
+    endfor
+
+    if bonus_variant != blank and bonus_variant.available
+      assign bonus_available = true
     endif
-  endfor
+  endif
+
   assign cart_currency = cart.currency.iso_code | default: shop.currency
 %}
 
@@ -48,7 +64,7 @@
   data-custom-product-grid
   data-bonus-variant-id="{{ bonus_variant.id }}"
   data-bonus-product-id="{{ bonus_product.id }}"
-  data-bonus-available="{% if bonus_variant != blank and bonus_variant.available %}true{% else %}false{% endif %}"
+  data-bonus-available="{{ bonus_available }}"
   data-cart-add-url="{{ routes.cart_add_url }}.js"
   data-cart-url="{{ routes.cart_url }}.js"
   data-money-format="{{ shop.money_format | strip_html | escape_once }}"
@@ -129,6 +145,7 @@
               <div
                 class="hidden-product-data"
                 style="display: none;"
+                data-product-id="{{ block.settings.product.id }}"
                 data-variant-id="{{ block.settings.product.selected_or_first_available_variant.id }}"
                 data-title="{{ block.settings.product.title | escape }}"
                 data-price="{{ block.settings.product.price | money }}"
@@ -262,7 +279,6 @@
     --cpg-heading-font: 'Lustria', Georgia, 'Times New Roman', serif;
     --cpg-ink: #000000;
     --cpg-paper: #ffffff;
-    --cpg-muted: #333333;
     --cpg-placeholder: #f5f5f5;
     --cpg-hotspot: rgb(248 248 248 / 0.9);
     --cpg-accent: #fff544;
@@ -348,16 +364,11 @@
     transition: none !important;
   }
 
-  /* Kill image zoom and pointer jitter on hover - Figma static image spec */
+  /* Lock the card imagery against theme-level hover zoom so the grid keeps its static crop. */
   .cpg-card:hover .cpg-card__image,
   .cpg-card:hover .cpg-card__media img,
   .cpg-card__media:hover > img,
-  .cpg-card:hover img,
-  .cpg .media:hover > img,
-  .cpg .card:hover .media img,
-  .cpg .card-wrapper:hover .media img,
-  .cpg-grid .media:hover > img,
-  .cpg-grid .card:hover .media img {
+  .cpg-card:hover img {
     transform: none !important;
     transition: none !important;
   }
@@ -378,7 +389,7 @@
     opacity: 0.55;
   }
 
-  /* Circular hotspot (Figma: 22px desktop / 16px mobile, 90% white fill) */
+  /* Position comes from block settings; transform centers the control on its anchor. */
   .cpg-card__hotspot {
     position: absolute;
     z-index: 2;
@@ -425,7 +436,7 @@
     pointer-events: none;
   }
 
-  /* Quick view dialog (Figma: 311px wide, 1px black border, square corners) */
+  /* Dialog follows the 311px design reference and yields to the viewport on small screens. */
   .cpg-modal {
     position: fixed;
     inset: 0;
@@ -600,16 +611,9 @@
     text-align: left;
   }
 
-  /* ------------------------------------------------------------------
-     Color options: unified locked flex container with sliding glider.
-
-     Architecture: ONE frame border lives on the container. Swatch items
-     have transparent backgrounds at z-index: 2 sitting above an absolute
-     glider at z-index: 1 that physically slides horizontally (translateX)
-     between selected swatches with a premium cubic-bezier easing.
-     ------------------------------------------------------------------ */
-  .cpg-colors,
-  .color-swatches {
+  /* The rail owns the border and clips the glider; swatches stay transparent so
+     the glider remains the only fill shared by every option. */
+  .cpg-colors {
     position: relative;
     display: flex;
     align-items: stretch;
@@ -623,19 +627,23 @@
     border-radius: 0;
   }
 
-  /* Sliding Glider: physical sliding black block behind swatches */
+  /* JS supplies the selected index, option count, and edge offsets so the same
+     glider works for any number of colors. */
   .cpg-colors__glider {
     position: absolute;
     top: -2px;
     bottom: -2px;
     z-index: 1;
+    left: calc(var(--cpg-glider-index, 0) * (100% / var(--cpg-color-count, 2)) - var(--cpg-glider-start, 2px));
+    width: calc(100% / var(--cpg-color-count, 2) + var(--cpg-glider-start, 2px) + var(--cpg-glider-end, 1px));
+    right: auto;
     background-color: #000000;
     pointer-events: none;
     opacity: 0;
     transform: none !important;
     transition:
       left 300ms cubic-bezier(0.25, 0.1, 0.25, 1),
-      right 300ms cubic-bezier(0.25, 0.1, 0.25, 1),
+      width 300ms cubic-bezier(0.25, 0.1, 0.25, 1),
       opacity 300ms ease-out;
   }
 
@@ -645,30 +653,7 @@
     opacity: 1;
   }
 
-  /* Strict left/right boundary lock: forces glider to stretch flush into and behind outer & divider borders */
-  .cpg-colors[data-selected-index="0"] .cpg-colors__glider,
-  .cpg-colors:has(.cpg-color:first-child.is-selected) .cpg-colors__glider,
-  .cpg-colors:has(.cpg-color:first-of-type.is-selected) .cpg-colors__glider,
-  .cpg-colors:has(.cpg-color:first-of-type[aria-checked="true"]) .cpg-colors__glider {
-    left: -2px;
-    right: calc(50% - 1px);
-  }
-
-  .cpg-colors[data-selected-index="1"] .cpg-colors__glider,
-  .cpg-colors:has(.cpg-color:last-child.is-selected) .cpg-colors__glider,
-  .cpg-colors:has(.cpg-color:last-of-type.is-selected) .cpg-colors__glider,
-  .cpg-colors:has(.cpg-color:last-of-type[aria-checked="true"]) .cpg-colors__glider {
-    left: calc(50% - 1px);
-    right: -2px;
-  }
-
-  /* Dynamic fallback for general N-item swatch collections */
-  .cpg-colors:not([data-selected-index]) .cpg-colors__glider {
-    left: calc(var(--cpg-glider-index, 0) * (100% / var(--cpg-color-count, 2)) - 2px);
-    right: calc(100% - (var(--cpg-glider-index, 0) + 1) * (100% / var(--cpg-color-count, 2)) - 2px);
-  }
-
-  /* Base swatch: transparent background sitting above glider (z-index: 2) */
+  /* Swatches sit above the glider and keep their own background transparent. */
   .color-swatch,
   .cpg-color {
     position: relative;
@@ -705,14 +690,14 @@
     --swatch-color: var(--cpg-swatch, var(--cpg-ink));
   }
 
-  /* Inter-box divider: integer 1px inline-start border */
+  /* A 1px inline-start border keeps adjacent swatches distinct above the glider. */
   .color-swatch + .color-swatch,
   .cpg-color + .cpg-color {
     padding-inline-start: 16px;
     border-inline-start: 1px solid var(--cpg-ink) !important;
   }
 
-  /* Hairline after the color strip (Figma indicator stroke) */
+  /* Hairline separates the color chip from its label. */
   .color-swatch::after,
   .cpg-color::after {
     content: '';
@@ -728,7 +713,7 @@
     z-index: 3;
   }
 
-  /* Left color strip: flush against the edge */
+  /* The chip is painted at the inline start and clipped by the swatch. */
   .color-swatch::before,
   .cpg-color::before {
     content: '';
@@ -744,9 +729,7 @@
     z-index: 3;
   }
 
-  /* Swatch label */
   .color-swatch span,
-  .color-swatch__label,
   .cpg-color__label {
     display: block;
     flex: 0 1 auto;
@@ -758,19 +741,14 @@
     z-index: 3;
   }
 
-  /* Hover on unselected: transparent */
-  .color-swatch:hover:not(.is-selected):not(.active):not(.selected),
-  .cpg-color:hover:not(.is-selected):not(.active):not(.selected) {
+  /* Hover must not paint a second fill over the shared glider. */
+  .color-swatch:hover:not(.is-selected),
+  .cpg-color:hover:not(.is-selected) {
     background-color: transparent !important;
     background: transparent !important;
   }
 
-  /* Selected / Active: text turns white so it reads cleanly over the black glider */
-  .color-swatch.selected,
-  .color-swatch.active,
   .color-swatch.is-selected,
-  .cpg-color.selected,
-  .cpg-color.active,
   .cpg-color.is-selected {
     margin: 0 !important;
     transform: none !important;
@@ -779,48 +757,46 @@
     color: #ffffff !important;
   }
 
-  /* :active pseudo (mousedown moment) */
   .color-swatch:active,
   .cpg-color:active {
     background-color: transparent !important;
     background: transparent !important;
   }
 
-  /* Hover on selected: keep white text */
-  .color-swatch.selected:hover,
-  .color-swatch.active:hover,
   .color-swatch.is-selected:hover,
-  .cpg-color.selected:hover,
-  .cpg-color.active:hover,
   .cpg-color.is-selected:hover {
     background-color: transparent !important;
     background: transparent !important;
     color: #ffffff !important;
   }
 
-  /* Aggressively strip out all outlines, focus rings, shadows, and tap highlights */
+  /* Strip non-keyboard outlines and tap highlights, but keep a visible focus ring. */
   .color-swatch,
   .cpg-color,
-  .color-swatch:focus,
-  .color-swatch:focus-visible,
   .color-swatch:active,
   .color-swatch:hover,
-  .color-swatch.selected,
-  .color-swatch.active,
   .color-swatch.is-selected,
-  .cpg-color:focus,
-  .cpg-color:focus-visible,
   .cpg-color:active,
   .cpg-color:hover,
-  .cpg-color.selected,
-  .cpg-color.active,
   .cpg-color.is-selected {
-    outline: none !important;
+    outline: none;
     box-shadow: none !important;
     -webkit-tap-highlight-color: transparent !important;
   }
 
-  /* Custom size dropdown (Component 213) */
+  /* The rail clips overflow, so the ring is inset to stay visible on every swatch. */
+  .color-swatch:focus-visible,
+  .cpg-color:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: -3px;
+  }
+
+  .color-swatch.is-selected:focus-visible,
+  .cpg-color.is-selected:focus-visible {
+    outline-color: #ffffff;
+  }
+
+  /* Size listbox keeps the compact select appearance while exposing the full keyboard model. */
   .cpg-select {
     position: relative;
     width: 100%;
@@ -873,11 +849,10 @@
     text-align: left;
   }
 
-  /* Once a size is selected: horizontally centered within the 216px left compartment */
+  /* Selected values center in the value cell while the icon keeps its fixed width. */
   .cpg-select__trigger.has-value .cpg-select__value,
   .cpg-select__trigger[data-has-value="true"] .cpg-select__value,
   .cpg-select__value.has-value,
-  .cpg-select__value.is-selected,
   .cpg-select__value[data-has-value="true"] {
     justify-content: center;
     text-align: center;
@@ -975,7 +950,6 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  /* Default State: Background #FFFFFF, color #000000. NO item is pre-highlighted or auto-hovered */
   .cpg-select__option,
   .cpg-select__option:not(:hover),
   .cpg-select__option.is-selected:not(:hover),
@@ -984,7 +958,6 @@
     color: #000000;
   }
 
-  /* Hover State (:hover ONLY): background smoothly or cleanly turns #000000 and text turns #FFFFFF */
   .cpg-select__option:hover {
     background-color: #000000;
     color: #ffffff;
@@ -992,10 +965,13 @@
   }
 
   .cpg-select__option:focus-visible {
-    outline: none;
+    outline: 2px solid #000000;
+    outline-offset: -2px;
+    background-color: #ffffff;
+    color: #000000;
   }
 
-  /* Add to cart: black with a yellow sliding fill on hover. */
+  /* The pseudo-element owns the hover fill so the label stays on one composited layer. */
   .cpg-modal__submit {
     position: relative;
     isolation: isolate;
@@ -1365,9 +1341,7 @@
       syncModalScrollLock();
     }
 
-    /* ---------------------------------------------------------------------
-       Product data
-       --------------------------------------------------------------------- */
+    // Product data
 
     readProduct(dataElement) {
       if (!dataElement) return null;
@@ -1376,6 +1350,7 @@
       const variants = parseJson(dataElement.querySelector('.product-variants-json'), []);
 
       return {
+        id: Number(dataElement.dataset.productId) || 0,
         baseVariantId: dataElement.dataset.variantId || '',
         title: dataElement.dataset.title || '',
         priceLabel: dataElement.dataset.price || '',
@@ -1495,9 +1470,7 @@
       return variants.length > 0 && variants.every((variant) => variant.available === false);
     }
 
-    /* ---------------------------------------------------------------------
-       Dialog rendering
-       --------------------------------------------------------------------- */
+    // Dialog rendering
 
     resetModal() {
       this.currentProduct = null;
@@ -1521,10 +1494,10 @@
 
       this.colorOptions.replaceChildren();
       this.colorOptions.classList.remove('has-selection');
-      delete this.colorOptions.dataset.selectedIndex;
-      this.colorOptions.style.removeProperty('--cpg-glider-opacity');
       this.colorOptions.style.removeProperty('--cpg-glider-index');
       this.colorOptions.style.removeProperty('--cpg-color-count');
+      this.colorOptions.style.removeProperty('--cpg-glider-start');
+      this.colorOptions.style.removeProperty('--cpg-glider-end');
       this.sizeMenu.replaceChildren();
       this.sizeMenu.style.width = '';
       this.sizeMenu.style.left = '';
@@ -1570,7 +1543,6 @@
       glider.className = 'cpg-colors__glider';
       glider.setAttribute('aria-hidden', 'true');
       this.colorOptions.append(glider);
-      this.colorGlider = glider;
       this.colorOptions.style.setProperty('--cpg-color-count', this.colorValues.length || 2);
 
       for (const [index, value] of this.colorValues.entries()) {
@@ -1579,16 +1551,10 @@
         button.className = 'cpg-color color-swatch';
         button.dataset.cpgColor = '';
         button.dataset.value = value;
-        button.dataset.color = value;
-        button.setAttribute('data-color', value);
         button.setAttribute('role', 'radio');
         button.setAttribute('aria-checked', 'false');
         button.tabIndex = index === 0 ? 0 : -1;
         button.style.setProperty('--cpg-swatch', resolveColor(value));
-
-        if (normalize(value) === 'black') {
-          button.classList.add('cpg-color--black');
-        }
 
         const label = document.createElement('span');
         label.className = 'cpg-color__label';
@@ -1642,10 +1608,12 @@
 
       const selectedIndex = this.colorButtons.findIndex((button) => button.dataset.value === value);
       if (selectedIndex !== -1) {
+        const lastIndex = this.colorButtons.length - 1;
         this.colorOptions.classList.add('has-selection');
-        this.colorOptions.dataset.selectedIndex = selectedIndex;
-        this.colorOptions.style.setProperty('--cpg-glider-opacity', '1');
         this.colorOptions.style.setProperty('--cpg-glider-index', selectedIndex);
+        this.colorOptions.style.setProperty('--cpg-color-count', this.colorButtons.length || 2);
+        this.colorOptions.style.setProperty('--cpg-glider-start', selectedIndex === 0 ? '2px' : '1px');
+        this.colorOptions.style.setProperty('--cpg-glider-end', selectedIndex === lastIndex ? '2px' : '1px');
       }
 
       for (const button of this.colorButtons) {
@@ -1782,9 +1750,7 @@
       }
     }
 
-    /* ---------------------------------------------------------------------
-       Open / close
-       --------------------------------------------------------------------- */
+    // Dialog lifecycle
 
     open(card) {
       const dataElement = card.querySelector('.hidden-product-data');
@@ -1828,9 +1794,7 @@
       if (!inside) this.closeDialog();
     }
 
-    /* ---------------------------------------------------------------------
-       Interactions
-       --------------------------------------------------------------------- */
+    // Event handling
 
     handleClick(event) {
       const target = event.target instanceof Element ? event.target : null;
@@ -1989,7 +1953,7 @@
       if (this.sizeTrigger.getAttribute('aria-expanded') === 'true') {
         this.closeSizeMenu(false);
       } else {
-        this.openSizeMenu(false);
+        this.openSizeMenu(false, false);
       }
     }
 
@@ -2018,7 +1982,7 @@
       }
     }
 
-    openSizeMenu(focusLast = false) {
+    openSizeMenu(focusLast = false, focusOption = true) {
       if (!this.sizeOptions.length) return;
 
       this.sizeMenu.hidden = false;
@@ -2039,11 +2003,12 @@
 
       window.requestAnimationFrame(() => {
         this.syncSizeMenuGeometry();
-        if (focusLast) {
-          const options = this.sizeOptions;
-          const target = options[options.length - 1];
-          target?.focus();
-        }
+        if (!focusOption) return;
+
+        const target = focusLast
+          ? this.sizeOptions[this.sizeOptions.length - 1]
+          : this.sizeOptions[0];
+        target?.focus();
       });
 
       this.dropdownAbort?.abort();
@@ -2084,9 +2049,7 @@
       this.modalImage.hidden = true;
     }
 
-    /* ---------------------------------------------------------------------
-       Add to cart
-       --------------------------------------------------------------------- */
+    // Cart submission
 
     async addToCart() {
       if (this.isAdding || !this.currentProduct) return;
@@ -2124,20 +2087,13 @@
       const items = [{ id: variantId, quantity: 1 }];
       const bonusVariantId = Number(this.section.dataset.bonusVariantId);
       const bonusProductId = Number(this.section.dataset.bonusProductId);
-      const bonusAvailable = this.section.dataset.bonusAvailable !== 'false';
+      const bonusAvailable = this.section.dataset.bonusAvailable === 'true';
 
       const norm = (val) => String(val || '').trim().toLowerCase();
-      const variantTitleParts = String(variant.title || '').split('/').map(norm);
-      const variantOptions = Array.isArray(variant.options) ? variant.options.map(norm) : [];
-      const allAttributes = [
-        norm(this.selectedColor),
-        norm(this.selectedSize),
-        ...variantTitleParts,
-        ...variantOptions,
-      ];
-
-      const isBlack = allAttributes.some((val) => val === 'black');
-      const isMedium = allAttributes.some((val) => val === 'm' || val === 'medium' || val === 'med');
+      const selectedColor = norm(this.selectedColor);
+      const selectedSize = norm(this.selectedSize);
+      const isBlack = this.colorIndex >= 0 && selectedColor === 'black';
+      const isMedium = this.sizeIndex >= 0 && (selectedSize === 'm' || selectedSize === 'medium');
       const isBonusProductItself =
         (Number.isFinite(bonusProductId) && bonusProductId > 0 && Number(this.currentProduct?.id) === bonusProductId) ||
         bonusVariantId === variantId;
@@ -2351,7 +2307,7 @@
       "type": "product",
       "id": "bonus_product",
       "label": "Bonus product",
-      "info": "Added automatically when Black (or black) and M (or Medium) are selected."
+      "info": "Added automatically when Color is Black and Size is M or Medium. Leave blank to disable the bonus."
     }
   ],
   "blocks": [

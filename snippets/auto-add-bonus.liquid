@@ -1,17 +1,36 @@
 {%- doc -%}
-  Automatically adds "Soft Winter Jacket" to the cart whenever any product
-  with variant options Black and Medium is added to the cart.
+  Adds the global bonus product when a cart line has the exact option values
+  Color: Black and Size: M or Medium. No other variant is used as a fallback.
+
+  This is the fallback path for cart additions that bypass the product grid.
+  The grid section owns its own merchant-selectable bonus product.
 {%- enddoc -%}
 
 {%- liquid
   assign bonus_product = all_products['dark-winter-jacket']
-  assign bonus_variant = bonus_product.selected_or_first_available_variant
+  assign bonus_variant = nil
+
   for variant in bonus_product.variants
     if variant.available
-      assign title_lower = variant.title | downcase
-      if title_lower contains 'black' and title_lower contains 'm'
-        assign bonus_variant = variant
-        break
+      assign variant_color = ''
+      assign variant_size = ''
+
+      for option in variant.options_with_values
+        assign option_name = option.name | downcase | strip
+        assign option_value = option.value | downcase | strip
+
+        if option_name == 'color' or option_name == 'colour'
+          assign variant_color = option_value
+        elsif option_name == 'size'
+          assign variant_size = option_value
+        endif
+      endfor
+
+      if variant_color == 'black'
+        if variant_size == 'm' or variant_size == 'medium'
+          assign bonus_variant = variant
+          break
+        endif
       endif
     endif
   endfor
@@ -27,29 +46,45 @@
 
     function isBlackAndMediumItem(item) {
       if (!item) return false;
-      const productId = Number(item.product_id);
-      if (productId === BONUS_PRODUCT_ID || item.handle === 'dark-winter-jacket') return false;
+      if (Number(item.product_id) === BONUS_PRODUCT_ID) return false;
 
-      const norm = (val) => String(val || '').trim().toLowerCase();
-      const variantTitle = String(item.variant_title || item.title || '');
-      const titleParts = variantTitle.split('/').map(norm);
-      const options = Array.isArray(item.options_with_values)
-        ? item.options_with_values.map((o) => norm(o.value))
-        : [];
-      const allOpts = [...titleParts, ...options];
+      const options = Array.isArray(item.options_with_values) ? item.options_with_values : [];
+      let color = '';
+      let size = '';
 
-      const isBlack = allOpts.some((v) => v === 'black');
-      const isMedium = allOpts.some((v) => v === 'm' || v === 'medium' || v === 'med');
-      return isBlack && isMedium;
+      for (const option of options) {
+        const name = String(option?.name || '').trim().toLowerCase();
+        const value = String(option?.value || '').trim().toLowerCase();
+
+        if (name === 'color' || name === 'colour') color = value;
+        if (name === 'size') size = value;
+      }
+
+      return color === 'black' && (size === 'm' || size === 'medium');
+    }
+
+    async function fetchRawCart() {
+      try {
+        const response = await fetch('/cart.js', {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+        });
+        return response.ok ? await response.json() : null;
+      } catch {
+        return null;
+      }
     }
 
     async function checkAndAddBonus(cart) {
-      if (isAutoAdding || !cart || !Array.isArray(cart.items)) return;
+      if (isAutoAdding) return;
 
-      const hasTriggerItem = cart.items.some(isBlackAndMediumItem);
-      const hasBonus = cart.items.some(
-        (item) => Number(item.id) === BONUS_VARIANT_ID || Number(item.product_id) === BONUS_PRODUCT_ID
-      );
+      // Event promises resolve with a CartSummary (cart.lines), while option
+      // values only exist on the raw AJAX cart (cart.items). Normalize here.
+      const currentCart = Array.isArray(cart?.items) ? cart : await fetchRawCart();
+      if (!currentCart || !Array.isArray(currentCart.items)) return;
+
+      const hasTriggerItem = currentCart.items.some(isBlackAndMediumItem);
+      const hasBonus = currentCart.items.some((item) => Number(item.id) === BONUS_VARIANT_ID);
 
       if (hasTriggerItem && !hasBonus) {
         isAutoAdding = true;
@@ -72,17 +107,24 @@
             });
             if (updatedCartRes.ok) {
               const updatedCart = await updatedCartRes.json();
+              const updatedCartSummary = CartLinesUpdateEvent.createCartFromAjaxResponse(updatedCart);
               const deferred = CartLinesUpdateEvent.createPromise();
+
               document.dispatchEvent(
                 new CartLinesUpdateEvent({
                   action: 'add',
                   context: 'cart',
-                  cart: CartLinesUpdateEvent.createCartFromAjaxResponse(updatedCart),
+                  cart: updatedCartSummary,
                   lines: [{ merchandiseId: String(BONUS_VARIANT_ID), quantity: 1 }],
                   promise: deferred.promise,
-                  detail: { source: 'auto-add-bonus' },
+                  detail: { source: 'auto-add-bonus', itemCount: updatedCart.item_count },
                 })
               );
+
+              deferred.resolve({
+                cart: updatedCartSummary,
+                detail: { source: 'auto-add-bonus', itemCount: updatedCart.item_count },
+              });
             }
           }
         } catch (e) {
@@ -93,7 +135,8 @@
       }
     }
 
-    // Listen to StandardEvents.cartLinesUpdate
+    // Standard cart events cover theme-driven additions; the promise settles
+    // with the cart summary that consumers already use.
     document.addEventListener(StandardEvents.cartLinesUpdate, async (event) => {
       if (event.action !== 'add') return;
       if (event.detail?.source === 'auto-add-bonus') return;
@@ -104,11 +147,12 @@
           if (result?.cart) {
             await checkAndAddBonus(result.cart);
           }
-        } catch (e) {}
+        } catch {}
       }
     });
 
-    // Also intercept fetch calls to /cart/add to catch direct form / ajax additions
+    // Direct /cart/add.js callers do not emit a standard event, so observe the
+    // response and reconcile against the raw cart.
     const originalFetch = window.fetch;
     window.fetch = async function (...args) {
       const response = await originalFetch.apply(this, args);
@@ -128,7 +172,7 @@
             }
           }
         }
-      } catch (e) {}
+      } catch {}
       return response;
     };
   </script>
