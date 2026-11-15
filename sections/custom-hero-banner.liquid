@@ -37,6 +37,7 @@
     color: var(--ch-hero-text);
     background-color: var(--ch-hero-bg);
     position: relative;
+    z-index: 1;
     width: 100%;
     margin: 0;
     padding: 0;
@@ -50,6 +51,12 @@
     box-sizing: border-box;
   }
 
+  #CustomHero-{{ section.id }} button,
+  #CustomHero-{{ section.id }} input,
+  #CustomHero-{{ section.id }} a {
+    font-family: inherit;
+  }
+
   /* -------------------------------------------------------------
      1. Top Bar / Header Banner
      ------------------------------------------------------------- */
@@ -58,7 +65,7 @@
     color: var(--ch-top-bar-text);
     width: 100%;
     position: relative;
-    z-index: 30;
+    z-index: 1;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
 
@@ -126,7 +133,7 @@
     position: relative;
     align-items: center;
     justify-content: center;
-    z-index: 35;
+    z-index: 2;
   }
 
   #CustomHero-{{ section.id }} .ch-hamburger-icon {
@@ -392,7 +399,7 @@
     padding: 0 20px;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
     position: relative;
-    z-index: 20;
+    z-index: 1;
   }
 
   #CustomHero-{{ section.id }} .ch-announcement__text {
