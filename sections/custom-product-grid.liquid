@@ -325,13 +325,22 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
-    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: none !important;
+    transition: none !important;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .cpg-card:hover .cpg-card__image {
-      transform: scale(1.03);
-    }
+  /* Kill image zoom and pointer jitter on hover - Figma static image spec */
+  .cpg-card:hover .cpg-card__image,
+  .cpg-card:hover .cpg-card__media img,
+  .cpg-card__media:hover > img,
+  .cpg-card:hover img,
+  .cpg .media:hover > img,
+  .cpg .card:hover .media img,
+  .cpg .card-wrapper:hover .media img,
+  .cpg-grid .media:hover > img,
+  .cpg-grid .card:hover .media img {
+    transform: none !important;
+    transition: none !important;
   }
 
   .cpg-card__placeholder {
@@ -598,21 +607,46 @@
   /* Sliding Glider: physical sliding black block behind swatches */
   .cpg-colors__glider {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
+    top: -2px;
+    bottom: -2px;
     z-index: 1;
-    width: calc(100% / var(--cpg-color-count, 2) + 0.5px);
-    height: 100%;
     background-color: #000000;
     pointer-events: none;
-    opacity: var(--cpg-glider-opacity, 0);
-    transform: translateX(calc(var(--cpg-glider-index, 0) * 100%));
-    transition: transform 300ms ease-out, opacity 300ms ease-out;
+    opacity: 0;
+    transform: none !important;
+    transition:
+      left 300ms cubic-bezier(0.25, 0.1, 0.25, 1),
+      right 300ms cubic-bezier(0.25, 0.1, 0.25, 1),
+      opacity 300ms ease-out;
   }
 
-  .cpg-colors.has-selection .cpg-colors__glider {
+  .cpg-colors.has-selection .cpg-colors__glider,
+  .cpg-colors:has(.cpg-color.is-selected) .cpg-colors__glider,
+  .cpg-colors:has(.cpg-color[aria-checked="true"]) .cpg-colors__glider {
     opacity: 1;
+  }
+
+  /* Strict left/right boundary lock: forces glider to stretch flush into and behind outer & divider borders */
+  .cpg-colors[data-selected-index="0"] .cpg-colors__glider,
+  .cpg-colors:has(.cpg-color:first-child.is-selected) .cpg-colors__glider,
+  .cpg-colors:has(.cpg-color:first-of-type.is-selected) .cpg-colors__glider,
+  .cpg-colors:has(.cpg-color:first-of-type[aria-checked="true"]) .cpg-colors__glider {
+    left: -2px;
+    right: calc(50% - 1px);
+  }
+
+  .cpg-colors[data-selected-index="1"] .cpg-colors__glider,
+  .cpg-colors:has(.cpg-color:last-child.is-selected) .cpg-colors__glider,
+  .cpg-colors:has(.cpg-color:last-of-type.is-selected) .cpg-colors__glider,
+  .cpg-colors:has(.cpg-color:last-of-type[aria-checked="true"]) .cpg-colors__glider {
+    left: calc(50% - 1px);
+    right: -2px;
+  }
+
+  /* Dynamic fallback for general N-item swatch collections */
+  .cpg-colors:not([data-selected-index]) .cpg-colors__glider {
+    left: calc(var(--cpg-glider-index, 0) * (100% / var(--cpg-color-count, 2)) - 2px);
+    right: calc(100% - (var(--cpg-glider-index, 0) + 1) * (100% / var(--cpg-color-count, 2)) - 2px);
   }
 
   /* Base swatch: transparent background sitting above glider (z-index: 2) */
@@ -1468,6 +1502,7 @@
 
       this.colorOptions.replaceChildren();
       this.colorOptions.classList.remove('has-selection');
+      delete this.colorOptions.dataset.selectedIndex;
       this.colorOptions.style.removeProperty('--cpg-glider-opacity');
       this.colorOptions.style.removeProperty('--cpg-glider-index');
       this.colorOptions.style.removeProperty('--cpg-color-count');
@@ -1589,6 +1624,7 @@
       const selectedIndex = this.colorButtons.findIndex((button) => button.dataset.value === value);
       if (selectedIndex !== -1) {
         this.colorOptions.classList.add('has-selection');
+        this.colorOptions.dataset.selectedIndex = selectedIndex;
         this.colorOptions.style.setProperty('--cpg-glider-opacity', '1');
         this.colorOptions.style.setProperty('--cpg-glider-index', selectedIndex);
       }
