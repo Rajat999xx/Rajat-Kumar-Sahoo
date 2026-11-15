@@ -1,0 +1,135 @@
+{%- doc -%}
+  Automatically adds "Soft Winter Jacket" to the cart whenever any product
+  with variant options Black and Medium is added to the cart.
+{%- enddoc -%}
+
+{%- liquid
+  assign bonus_product = all_products['dark-winter-jacket']
+  assign bonus_variant = bonus_product.selected_or_first_available_variant
+  for variant in bonus_product.variants
+    if variant.available
+      assign title_lower = variant.title | downcase
+      if title_lower contains 'black' and title_lower contains 'm'
+        assign bonus_variant = variant
+        break
+      endif
+    endif
+  endfor
+-%}
+
+{%- if bonus_variant != blank and bonus_variant.available -%}
+  <script type="module">
+    import { StandardEvents, CartLinesUpdateEvent } from '@shopify/events';
+
+    const BONUS_VARIANT_ID = {{ bonus_variant.id }};
+    const BONUS_PRODUCT_ID = {{ bonus_product.id }};
+    let isAutoAdding = false;
+
+    function isBlackAndMediumItem(item) {
+      if (!item) return false;
+      const productId = Number(item.product_id);
+      if (productId === BONUS_PRODUCT_ID || item.handle === 'dark-winter-jacket') return false;
+
+      const norm = (val) => String(val || '').trim().toLowerCase();
+      const variantTitle = String(item.variant_title || item.title || '');
+      const titleParts = variantTitle.split('/').map(norm);
+      const options = Array.isArray(item.options_with_values)
+        ? item.options_with_values.map((o) => norm(o.value))
+        : [];
+      const allOpts = [...titleParts, ...options];
+
+      const isBlack = allOpts.some((v) => v === 'black');
+      const isMedium = allOpts.some((v) => v === 'm' || v === 'medium' || v === 'med');
+      return isBlack && isMedium;
+    }
+
+    async function checkAndAddBonus(cart) {
+      if (isAutoAdding || !cart || !Array.isArray(cart.items)) return;
+
+      const hasTriggerItem = cart.items.some(isBlackAndMediumItem);
+      const hasBonus = cart.items.some(
+        (item) => Number(item.id) === BONUS_VARIANT_ID || Number(item.product_id) === BONUS_PRODUCT_ID
+      );
+
+      if (hasTriggerItem && !hasBonus) {
+        isAutoAdding = true;
+        try {
+          const res = await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              items: [{ id: BONUS_VARIANT_ID, quantity: 1 }],
+            }),
+          });
+
+          if (res.ok) {
+            const updatedCartRes = await fetch('/cart.js', {
+              headers: { Accept: 'application/json' },
+              cache: 'no-store',
+            });
+            if (updatedCartRes.ok) {
+              const updatedCart = await updatedCartRes.json();
+              const deferred = CartLinesUpdateEvent.createPromise();
+              document.dispatchEvent(
+                new CartLinesUpdateEvent({
+                  action: 'add',
+                  context: 'cart',
+                  cart: CartLinesUpdateEvent.createCartFromAjaxResponse(updatedCart),
+                  lines: [{ merchandiseId: String(BONUS_VARIANT_ID), quantity: 1 }],
+                  promise: deferred.promise,
+                  detail: { source: 'auto-add-bonus' },
+                })
+              );
+            }
+          }
+        } catch (e) {
+          console.warn('[auto-add-bonus] Failed to auto-add bonus product:', e);
+        } finally {
+          isAutoAdding = false;
+        }
+      }
+    }
+
+    // Listen to StandardEvents.cartLinesUpdate
+    document.addEventListener(StandardEvents.cartLinesUpdate, async (event) => {
+      if (event.action !== 'add') return;
+      if (event.detail?.source === 'auto-add-bonus') return;
+
+      if (event.promise && typeof event.promise.then === 'function') {
+        try {
+          const result = await event.promise;
+          if (result?.cart) {
+            await checkAndAddBonus(result.cart);
+          }
+        } catch (e) {}
+      }
+    });
+
+    // Also intercept fetch calls to /cart/add to catch direct form / ajax additions
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+      const response = await originalFetch.apply(this, args);
+      try {
+        const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url) || '';
+        if (url.includes('/cart/add')) {
+          const clone = response.clone();
+          const data = await clone.json().catch(() => null);
+          if (data && !data.status) {
+            const cartRes = await originalFetch('/cart.js', {
+              headers: { Accept: 'application/json' },
+              cache: 'no-store',
+            });
+            if (cartRes.ok) {
+              const cart = await cartRes.json();
+              await checkAndAddBonus(cart);
+            }
+          }
+        }
+      } catch (e) {}
+      return response;
+    };
+  </script>
+{%- endif -%}

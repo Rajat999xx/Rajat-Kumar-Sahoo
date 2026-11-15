@@ -26,7 +26,19 @@
 
 {% liquid
   assign bonus_product = section.settings.bonus_product
+  if bonus_product == blank
+    assign bonus_product = all_products['dark-winter-jacket']
+  endif
   assign bonus_variant = bonus_product.selected_or_first_available_variant
+  for variant in bonus_product.variants
+    if variant.available
+      assign title_lower = variant.title | downcase
+      if title_lower contains 'black' and title_lower contains 'm'
+        assign bonus_variant = variant
+        break
+      endif
+    endif
+  endfor
   assign cart_currency = cart.currency.iso_code | default: shop.currency
 %}
 
@@ -35,6 +47,7 @@
   class="cpg"
   data-custom-product-grid
   data-bonus-variant-id="{{ bonus_variant.id }}"
+  data-bonus-product-id="{{ bonus_product.id }}"
   data-bonus-available="{% if bonus_variant != blank and bonus_variant.available %}true{% else %}false{% endif %}"
   data-cart-add-url="{{ routes.cart_add_url }}.js"
   data-cart-url="{{ routes.cart_url }}.js"
@@ -2104,16 +2117,32 @@
 
       const items = [{ id: variantId, quantity: 1 }];
       const bonusVariantId = Number(this.section.dataset.bonusVariantId);
+      const bonusProductId = Number(this.section.dataset.bonusProductId);
       const bonusAvailable = this.section.dataset.bonusAvailable !== 'false';
-      const isBlack = normalize(this.selectedColor) === 'black';
-      const isMedium = ['m', 'medium'].includes(normalize(this.selectedSize));
+
+      const norm = (val) => String(val || '').trim().toLowerCase();
+      const variantTitleParts = String(variant.title || '').split('/').map(norm);
+      const variantOptions = Array.isArray(variant.options) ? variant.options.map(norm) : [];
+      const allAttributes = [
+        norm(this.selectedColor),
+        norm(this.selectedSize),
+        ...variantTitleParts,
+        ...variantOptions,
+      ];
+
+      const isBlack = allAttributes.some((val) => val === 'black');
+      const isMedium = allAttributes.some((val) => val === 'm' || val === 'medium' || val === 'med');
+      const isBonusProductItself =
+        (Number.isFinite(bonusProductId) && bonusProductId > 0 && Number(this.currentProduct?.id) === bonusProductId) ||
+        bonusVariantId === variantId;
+
       const shouldAddBonus =
         isBlack &&
         isMedium &&
         bonusAvailable &&
         Number.isFinite(bonusVariantId) &&
         bonusVariantId > 0 &&
-        bonusVariantId !== variantId;
+        !isBonusProductItself;
 
       if (shouldAddBonus) {
         items.push({ id: bonusVariantId, quantity: 1 });
