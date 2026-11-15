@@ -557,189 +557,352 @@
   }
 
   .cpg-modal__label {
-    display: block;
-    margin: 0 0 6px;
-    color: var(--cpg-muted);
-    font-family: var(--cpg-body-font);
+    display: flex;
+    align-items: center;
+    height: 18px;
+    margin: 0 0 6.35px;
+    color: #333333;
+    font-family: var(--cpg-body-font, 'Jost', sans-serif);
     font-size: 14px;
     font-weight: 400;
-    line-height: 1.3;
+    line-height: 130%;
+    letter-spacing: 0;
     text-align: left;
   }
 
-  /* Color options: white boxes with a thick colored left border. */
-  .cpg-colors {
-    display: flex;
-    width: 100%;
-    background-color: var(--cpg-paper);
-    border: 1px solid var(--cpg-ink);
-  }
+  /* ------------------------------------------------------------------
+     Color options: unified locked flex container.
 
-  .cpg-color {
-    position: relative;
-    flex: 1 1 0;
-    min-width: 0;
+     Architecture: ONE frame border lives on the container. Swatch items
+     carry zero borders and zero margins, so no per-item geometry can ever
+     differ between swatches. Dividers and color strips are paint-only
+     pseudo-elements clipped by a fixed-size box, so no sub-pixel border
+     rounding or negative-margin overlap can shift a box.
+     ------------------------------------------------------------------ */
+  .cpg-colors,
+  .color-swatches {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
     height: 40px;
     margin: 0;
-    padding: 0 8px 0 12px;
+    padding: 0;
     overflow: hidden;
     background-color: var(--cpg-paper);
-    border: 0;
-    border-left: 6px solid var(--cpg-swatch, #9e9e9e);
+    border: 1px solid var(--cpg-ink);
     border-radius: 0;
+  }
+
+  /* Base swatch: hard geometry lock. The !important resets neutralize any
+     global button/label CSS (UA or theme) trying to inject margins, borders,
+     transforms, or shadows onto these elements. */
+  .color-swatch,
+  .cpg-color {
+    position: relative;
+    overflow: hidden;
+    flex: 1 1 0;
+    align-self: stretch;
+    min-width: 0;
+    height: 100%;
+    margin: 0 !important;
+    padding-block: 0;
+    padding-inline: 17px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--cpg-paper);
+    border: 0 !important;
+    border-radius: 0;
+    box-shadow: none !important;
+    transform: none !important;
+    translate: none !important;
+    scale: none !important;
     color: var(--cpg-ink);
     cursor: pointer;
-    font-family: var(--cpg-body-font);
+    font-family: var(--cpg-body-font, 'Jost', sans-serif);
     font-size: 16px;
     font-weight: 400;
     line-height: 1;
-    text-align: left;
-    transition:
-      background-color 0.2s ease,
-      color 0.2s ease;
+    text-align: start;
+    --swatch-color: var(--cpg-swatch, var(--cpg-ink));
   }
 
-  /* Thin outline after the color strip, matching the Figma indicator stroke. */
+  /* Inter-box divider: integer 1px inline-start border. Only the inline
+     axis is touched, so it can never change an item's height or vertical
+     alignment. box-sizing:border-box keeps all items at equal widths.
+     Padding is reduced by 1px so every label starts at the same offset. */
+  .color-swatch + .color-swatch,
+  .cpg-color + .cpg-color {
+    padding-inline-start: 16px;
+    border-inline-start: 1px solid var(--cpg-ink) !important;
+  }
+
+  /* Hairline after the color strip (Figma indicator stroke). Paint-only,
+     applied to every item so each swatch reads identically. Logical
+     inset so it mirrors with the strip in RTL. */
+  .color-swatch::after,
   .cpg-color::after {
     content: '';
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
+    inset-block: 0;
+    inset-inline-start: 6px;
     width: 1px;
     background-color: rgb(0 0 0 / 0.35);
     pointer-events: none;
   }
 
+  /* Left color strip: paint-only, clipped flush by the item. Logical
+     properties so the strip mirrors correctly in RTL. */
+  .color-swatch::before,
+  .cpg-color::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 6px;
+    background-color: var(--swatch-color, var(--cpg-swatch, var(--cpg-ink)));
+    pointer-events: none;
+  }
+
+  /* Swatch label */
+  .color-swatch span,
+  .color-swatch__label,
   .cpg-color__label {
     display: block;
+    flex: 0 1 auto;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .cpg-color:hover:not(.is-selected) {
+  /* Hover: cosmetic only — no geometry properties */
+  .color-swatch:hover:not(.is-selected):not(.active):not(.selected),
+  .cpg-color:hover:not(.is-selected):not(.active):not(.selected) {
     background-color: #f8f8f8;
   }
 
+  /* Selected / Active: cosmetic only — zero geometry re-declarations. The
+     margin/transform locks are restated defensively so no inherited rule
+     can move the selected box against its neighbours. */
+  .color-swatch.selected,
+  .color-swatch.active,
+  .color-swatch.is-selected,
+  .cpg-color.selected,
+  .cpg-color.active,
   .cpg-color.is-selected {
+    margin: 0 !important;
+    transform: none !important;
     background-color: var(--cpg-ink);
     color: #ffffff;
   }
 
+  /* :active pseudo (mousedown moment): cosmetic only */
+  .color-swatch:active,
+  .cpg-color:active {
+    background-color: var(--cpg-ink);
+    color: #ffffff;
+  }
+
+  /* Hover on selected: keep black */
+  .color-swatch.selected:hover,
+  .color-swatch.active:hover,
+  .color-swatch.is-selected:hover,
+  .cpg-color.selected:hover,
+  .cpg-color.active:hover,
+  .cpg-color.is-selected:hover {
+    background-color: var(--cpg-ink);
+    color: #ffffff;
+  }
+
+  /* Override Dawn's global *:focus-visible ring (outline-offset: 0.2em
+     paints OUTSIDE the box, which reads as a position shift against the
+     neighbour). Draw the ring INSIDE the box instead: still clearly
+     visible for keyboard users, physically unable to escape the swatch. */
+  .color-swatch:focus,
+  .color-swatch:focus-visible,
+  .cpg-color:focus,
   .cpg-color:focus-visible {
     outline: 2px solid currentcolor;
     outline-offset: -3px;
   }
 
-  /* Custom size dropdown */
+  /* Custom size dropdown (Component 213) */
   .cpg-select {
     position: relative;
     width: 100%;
+    max-width: 271px;
+    margin: 0;
+    padding: 0;
   }
 
   .cpg-select__trigger {
+    box-sizing: border-box;
     display: flex;
     align-items: stretch;
     justify-content: space-between;
     width: 100%;
+    max-width: 271px;
     height: 40px;
     margin: 0;
     padding: 0;
-    background-color: var(--cpg-paper);
-    border: 1px solid var(--cpg-ink);
+    background-color: #ffffff;
+    border: 1px solid #000000;
     border-radius: 0;
-    color: var(--cpg-ink);
+    color: #000000;
     cursor: pointer;
-    font-family: var(--cpg-body-font);
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1;
+    font-family: var(--cpg-body-font, 'Jost', sans-serif);
     text-align: left;
+    outline: none;
   }
 
   .cpg-select__value {
+    box-sizing: border-box;
     display: flex;
     flex: 1 1 auto;
-    align-items: center;
     min-width: 0;
-    padding: 0 13px;
+    width: auto;
+    height: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 13px;
+    padding-right: 13px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-family: var(--cpg-body-font, 'Jost', sans-serif);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 100%;
+    letter-spacing: -0.02em;
+    color: #000000;
+    text-align: left;
+  }
+
+  /* Once a size is selected: horizontally centered within the 216px left compartment */
+  .cpg-select__trigger.has-value .cpg-select__value,
+  .cpg-select__trigger[data-has-value="true"] .cpg-select__value,
+  .cpg-select__value.has-value,
+  .cpg-select__value.is-selected,
+  .cpg-select__value[data-has-value="true"] {
+    justify-content: center;
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .cpg-select__icon {
+    box-sizing: border-box;
     display: flex;
     flex: 0 0 55px;
+    width: 55px;
+    max-width: 55px;
+    height: 100%;
+    align-self: center;
     align-items: center;
     justify-content: center;
-    width: 55px;
-    border-left: 1px solid var(--cpg-ink);
+    border-left: 1px solid #000000;
+    padding: 0;
+    margin: 0;
   }
 
   .cpg-select__chevron {
     display: block;
     width: 12px;
     height: 6px;
-    transition: transform 0.2s ease;
+    color: #000000;
+    stroke: #000000;
+    transition: transform 300ms ease-out;
   }
 
-  .cpg-select.is-open .cpg-select__chevron {
+  .cpg-select.is-open .cpg-select__chevron,
+  .cpg-select__trigger[aria-expanded="true"] .cpg-select__chevron {
     transform: rotate(180deg);
   }
 
   .cpg-select__trigger:focus-visible {
-    outline: 2px solid var(--cpg-ink);
-    outline-offset: 2px;
+    outline: 2px solid #000000;
+    outline-offset: -2px;
   }
 
   .cpg-select__menu {
+    box-sizing: border-box;
     position: absolute;
     top: 100%;
     left: 0;
+    right: 0;
     z-index: 10;
-    width: 100%;
-    max-height: 182px;
-    margin: 0;
+    width: auto;
+    max-width: 271px;
+    height: 99px;
+    max-height: 99px;
+    margin: -1px 0 0;
     padding: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    background-color: var(--cpg-paper);
-    border: 1px solid var(--cpg-ink);
+    background-color: #ffffff;
+    border: 1px solid #000000;
     list-style: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .cpg-select__menu::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .cpg-select.is-dropup .cpg-select__menu {
     top: auto;
     bottom: 100%;
+    margin: 0 0 -1px;
   }
 
   .cpg-select__option {
+    box-sizing: border-box;
     display: flex;
     align-items: center;
-    min-height: 36px;
-    padding: 0 18px;
-    background-color: var(--cpg-paper);
-    color: var(--cpg-ink);
+    justify-content: center;
+    width: 100%;
+    height: 33px;
+    min-height: 33px;
+    max-height: 33px;
+    padding: 0 10px;
+    margin: 0;
+    background-color: #ffffff;
+    color: #000000;
     cursor: pointer;
-    font-family: var(--cpg-body-font);
+    font-family: var(--cpg-body-font, 'Jost', sans-serif);
     font-size: 16px;
     font-weight: 400;
     line-height: 1;
+    text-align: center;
+    user-select: none;
+    outline: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  .cpg-select__option:hover,
-  .cpg-select__option:focus,
-  .cpg-select__option.is-selected {
-    background-color: var(--cpg-ink);
+  /* Default State: Background #FFFFFF, color #000000. NO item is pre-highlighted or auto-hovered */
+  .cpg-select__option,
+  .cpg-select__option:not(:hover),
+  .cpg-select__option.is-selected:not(:hover),
+  .cpg-select__option[aria-selected="true"]:not(:hover) {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  /* Hover State (:hover ONLY): background smoothly or cleanly turns #000000 and text turns #FFFFFF */
+  .cpg-select__option:hover {
+    background-color: #000000;
     color: #ffffff;
     outline: none;
   }
 
   .cpg-select__option:focus-visible {
-    outline: 2px solid #ffffff;
-    outline-offset: -3px;
+    outline: none;
   }
 
   /* Add to cart: black with a yellow sliding fill on hover. */
@@ -1271,6 +1434,11 @@
       this.colorSection.hidden = true;
       this.sizeSection.hidden = true;
       this.sizeValue.textContent = 'Choose your size';
+      this.sizeValue.classList.remove('has-value');
+      this.sizeTrigger.classList.remove('has-value');
+      this.sizeSelect.classList.remove('has-value');
+      this.sizeValue.removeAttribute('data-has-value');
+      this.sizeTrigger.removeAttribute('data-has-value');
       this.closeSizeMenu();
 
       this.submit.classList.remove('is-added');
@@ -1304,13 +1472,19 @@
       for (const [index, value] of this.colorValues.entries()) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'cpg-color';
+        button.className = 'cpg-color color-swatch';
         button.dataset.cpgColor = '';
         button.dataset.value = value;
+        button.dataset.color = value;
+        button.setAttribute('data-color', value);
         button.setAttribute('role', 'radio');
         button.setAttribute('aria-checked', 'false');
         button.tabIndex = index === 0 ? 0 : -1;
         button.style.setProperty('--cpg-swatch', resolveColor(value));
+
+        if (normalize(value) === 'black') {
+          button.classList.add('cpg-color--black');
+        }
 
         const label = document.createElement('span');
         label.className = 'cpg-color__label';
@@ -1331,6 +1505,11 @@
       this.sizeOptions = [];
       this.sizeSection.hidden = this.sizeValues.length === 0;
       this.sizeValue.textContent = 'Choose your size';
+      this.sizeValue.classList.remove('has-value');
+      this.sizeTrigger.classList.remove('has-value');
+      this.sizeSelect.classList.remove('has-value');
+      this.sizeValue.removeAttribute('data-has-value');
+      this.sizeTrigger.removeAttribute('data-has-value');
       this.sizeTrigger.setAttribute('aria-expanded', 'false');
       this.sizeSelect.classList.remove('is-open', 'is-dropup');
       this.sizeMenu.hidden = true;
@@ -1372,7 +1551,18 @@
 
     setSize(value, { update = true, focusTrigger = true } = {}) {
       this.selectedSize = value;
+      const hasValue = Boolean(value && value !== 'Choose your size');
       this.sizeValue.textContent = value || 'Choose your size';
+      this.sizeValue.classList.toggle('has-value', hasValue);
+      this.sizeTrigger.classList.toggle('has-value', hasValue);
+      this.sizeSelect.classList.toggle('has-value', hasValue);
+      if (hasValue) {
+        this.sizeValue.dataset.hasValue = 'true';
+        this.sizeTrigger.dataset.hasValue = 'true';
+      } else {
+        delete this.sizeValue.dataset.hasValue;
+        delete this.sizeTrigger.dataset.hasValue;
+      }
 
       for (const option of this.sizeOptions) {
         const selected = option.dataset.value === value;
@@ -1700,7 +1890,7 @@
 
       this.sizeSelect.classList.remove('is-dropup');
       const triggerRect = this.sizeTrigger.getBoundingClientRect();
-      const menuHeight = Math.min(this.sizeMenu.scrollHeight || 182, 182);
+      const menuHeight = Math.min(this.sizeMenu.scrollHeight || 99, 99);
       const spaceBelow = window.innerHeight - triggerRect.bottom;
       const spaceAbove = triggerRect.top;
 
@@ -1708,10 +1898,11 @@
         this.sizeSelect.classList.add('is-dropup');
       }
 
-      const options = this.sizeOptions;
-      const selected = options.find((option) => option.getAttribute('aria-selected') === 'true');
-      const target = selected || (focusLast ? options[options.length - 1] : options[0]);
-      window.requestAnimationFrame(() => target?.focus());
+      if (focusLast) {
+        const options = this.sizeOptions;
+        const target = options[options.length - 1];
+        window.requestAnimationFrame(() => target?.focus());
+      }
 
       this.dropdownAbort?.abort();
       this.dropdownAbort = new AbortController();
