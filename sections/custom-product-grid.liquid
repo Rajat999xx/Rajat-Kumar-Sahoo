@@ -182,7 +182,9 @@
         role="radiogroup"
         aria-labelledby="CpgColorLabel-{{ section.id }}"
         data-cpg-colors
-      ></div>
+      >
+        <div class="cpg-colors__glider" aria-hidden="true" data-cpg-glider></div>
+      </div>
     </div>
 
     <div class="cpg-modal__field" data-cpg-size-section hidden>
@@ -571,16 +573,16 @@
   }
 
   /* ------------------------------------------------------------------
-     Color options: unified locked flex container.
+     Color options: unified locked flex container with sliding glider.
 
      Architecture: ONE frame border lives on the container. Swatch items
-     carry zero borders and zero margins, so no per-item geometry can ever
-     differ between swatches. Dividers and color strips are paint-only
-     pseudo-elements clipped by a fixed-size box, so no sub-pixel border
-     rounding or negative-margin overlap can shift a box.
+     have transparent backgrounds at z-index: 2 sitting above an absolute
+     glider at z-index: 1 that physically slides horizontally (translateX)
+     between selected swatches with a premium cubic-bezier easing.
      ------------------------------------------------------------------ */
   .cpg-colors,
   .color-swatches {
+    position: relative;
     display: flex;
     align-items: stretch;
     width: 100%;
@@ -593,12 +595,31 @@
     border-radius: 0;
   }
 
-  /* Base swatch: hard geometry lock. The !important resets neutralize any
-     global button/label CSS (UA or theme) trying to inject margins, borders,
-     transforms, or shadows onto these elements. */
+  /* Sliding Glider: physical sliding black block behind swatches */
+  .cpg-colors__glider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    width: calc(100% / var(--cpg-color-count, 2) + 0.5px);
+    height: 100%;
+    background-color: #000000;
+    pointer-events: none;
+    opacity: var(--cpg-glider-opacity, 0);
+    transform: translateX(calc(var(--cpg-glider-index, 0) * 100%));
+    transition: transform 300ms ease-out, opacity 300ms ease-out;
+  }
+
+  .cpg-colors.has-selection .cpg-colors__glider {
+    opacity: 1;
+  }
+
+  /* Base swatch: transparent background sitting above glider (z-index: 2) */
   .color-swatch,
   .cpg-color {
     position: relative;
+    z-index: 2;
     overflow: hidden;
     flex: 1 1 0;
     align-self: stretch;
@@ -612,7 +633,8 @@
     justify-content: flex-start;
     appearance: none;
     -webkit-appearance: none;
-    background-color: var(--cpg-paper);
+    background-color: transparent !important;
+    background: transparent !important;
     border: 0 !important;
     border-radius: 0;
     box-shadow: none !important;
@@ -626,44 +648,47 @@
     font-weight: 400;
     line-height: 1;
     text-align: start;
+    transition: color 0.25s ease;
     --swatch-color: var(--cpg-swatch, var(--cpg-ink));
   }
 
-  /* Inter-box divider: integer 1px inline-start border. Only the inline
-     axis is touched, so it can never change an item's height or vertical
-     alignment. box-sizing:border-box keeps all items at equal widths.
-     Padding is reduced by 1px so every label starts at the same offset. */
+  /* Inter-box divider: integer 1px inline-start border */
   .color-swatch + .color-swatch,
   .cpg-color + .cpg-color {
     padding-inline-start: 16px;
     border-inline-start: 1px solid var(--cpg-ink) !important;
   }
 
-  /* Hairline after the color strip (Figma indicator stroke). Paint-only,
-     applied to every item so each swatch reads identically. Logical
-     inset so it mirrors with the strip in RTL. */
+  /* Hairline after the color strip (Figma indicator stroke) */
   .color-swatch::after,
   .cpg-color::after {
     content: '';
     position: absolute;
-    inset-block: 0;
-    inset-inline-start: 6px;
+    top: 0;
+    bottom: 0;
+    left: 6px;
     width: 1px;
+    margin: 0;
+    border: none;
     background-color: rgb(0 0 0 / 0.35);
     pointer-events: none;
+    z-index: 3;
   }
 
-  /* Left color strip: paint-only, clipped flush by the item. Logical
-     properties so the strip mirrors correctly in RTL. */
+  /* Left color strip: flush against the edge */
   .color-swatch::before,
   .cpg-color::before {
     content: '';
     position: absolute;
-    inset-block: 0;
-    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
     width: 6px;
+    margin: 0;
+    border: none;
     background-color: var(--swatch-color, var(--cpg-swatch, var(--cpg-ink)));
     pointer-events: none;
+    z-index: 3;
   }
 
   /* Swatch label */
@@ -676,17 +701,18 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    position: relative;
+    z-index: 3;
   }
 
-  /* Hover: cosmetic only — no geometry properties */
+  /* Hover on unselected: transparent */
   .color-swatch:hover:not(.is-selected):not(.active):not(.selected),
   .cpg-color:hover:not(.is-selected):not(.active):not(.selected) {
-    background-color: #f8f8f8;
+    background-color: transparent !important;
+    background: transparent !important;
   }
 
-  /* Selected / Active: cosmetic only — zero geometry re-declarations. The
-     margin/transform locks are restated defensively so no inherited rule
-     can move the selected box against its neighbours. */
+  /* Selected / Active: text turns white so it reads cleanly over the black glider */
   .color-swatch.selected,
   .color-swatch.active,
   .color-swatch.is-selected,
@@ -695,38 +721,50 @@
   .cpg-color.is-selected {
     margin: 0 !important;
     transform: none !important;
-    background-color: var(--cpg-ink);
-    color: #ffffff;
+    background-color: transparent !important;
+    background: transparent !important;
+    color: #ffffff !important;
   }
 
-  /* :active pseudo (mousedown moment): cosmetic only */
+  /* :active pseudo (mousedown moment) */
   .color-swatch:active,
   .cpg-color:active {
-    background-color: var(--cpg-ink);
-    color: #ffffff;
+    background-color: transparent !important;
+    background: transparent !important;
   }
 
-  /* Hover on selected: keep black */
+  /* Hover on selected: keep white text */
   .color-swatch.selected:hover,
   .color-swatch.active:hover,
   .color-swatch.is-selected:hover,
   .cpg-color.selected:hover,
   .cpg-color.active:hover,
   .cpg-color.is-selected:hover {
-    background-color: var(--cpg-ink);
-    color: #ffffff;
+    background-color: transparent !important;
+    background: transparent !important;
+    color: #ffffff !important;
   }
 
-  /* Override Dawn's global *:focus-visible ring (outline-offset: 0.2em
-     paints OUTSIDE the box, which reads as a position shift against the
-     neighbour). Draw the ring INSIDE the box instead: still clearly
-     visible for keyboard users, physically unable to escape the swatch. */
+  /* Aggressively strip out all outlines, focus rings, shadows, and tap highlights */
+  .color-swatch,
+  .cpg-color,
   .color-swatch:focus,
   .color-swatch:focus-visible,
+  .color-swatch:active,
+  .color-swatch:hover,
+  .color-swatch.selected,
+  .color-swatch.active,
+  .color-swatch.is-selected,
   .cpg-color:focus,
-  .cpg-color:focus-visible {
-    outline: 2px solid currentcolor;
-    outline-offset: -3px;
+  .cpg-color:focus-visible,
+  .cpg-color:active,
+  .cpg-color:hover,
+  .cpg-color.selected,
+  .cpg-color.active,
+  .cpg-color.is-selected {
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent !important;
   }
 
   /* Custom size dropdown (Component 213) */
@@ -1429,6 +1467,10 @@
       this.modalImage.alt = '';
 
       this.colorOptions.replaceChildren();
+      this.colorOptions.classList.remove('has-selection');
+      this.colorOptions.style.removeProperty('--cpg-glider-opacity');
+      this.colorOptions.style.removeProperty('--cpg-glider-index');
+      this.colorOptions.style.removeProperty('--cpg-color-count');
       this.sizeMenu.replaceChildren();
       this.sizeMenu.style.width = '';
       this.sizeMenu.style.left = '';
@@ -1469,6 +1511,13 @@
       this.colorOptions.replaceChildren();
       this.colorButtons = [];
       this.colorSection.hidden = this.colorValues.length === 0;
+
+      const glider = document.createElement('div');
+      glider.className = 'cpg-colors__glider';
+      glider.setAttribute('aria-hidden', 'true');
+      this.colorOptions.append(glider);
+      this.colorGlider = glider;
+      this.colorOptions.style.setProperty('--cpg-color-count', this.colorValues.length || 2);
 
       for (const [index, value] of this.colorValues.entries()) {
         const button = document.createElement('button');
@@ -1536,6 +1585,13 @@
 
     setColor(value, { update = true } = {}) {
       this.selectedColor = value;
+
+      const selectedIndex = this.colorButtons.findIndex((button) => button.dataset.value === value);
+      if (selectedIndex !== -1) {
+        this.colorOptions.classList.add('has-selection');
+        this.colorOptions.style.setProperty('--cpg-glider-opacity', '1');
+        this.colorOptions.style.setProperty('--cpg-glider-index', selectedIndex);
+      }
 
       for (const button of this.colorButtons) {
         const selected = button.dataset.value === value;
