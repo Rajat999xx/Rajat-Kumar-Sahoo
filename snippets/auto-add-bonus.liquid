@@ -75,6 +75,17 @@
       }
     }
 
+    function getCartSectionIds() {
+      const sectionIds = new Set();
+
+      for (const component of document.querySelectorAll('cart-items-component[data-section-id]')) {
+        const sectionId = component.dataset.sectionId;
+        if (sectionId) sectionIds.add(sectionId);
+      }
+
+      return [...sectionIds];
+    }
+
     async function checkAndAddBonus(cart) {
       if (isAutoAdding) return;
 
@@ -89,7 +100,16 @@
       if (hasTriggerItem && !hasBonus) {
         isAutoAdding = true;
         try {
-          const res = await fetch('/cart/add.js', {
+          const sectionIds = getCartSectionIds();
+          const sectionParams = new URLSearchParams();
+          // Render the cart sections in the same response as the bonus add so
+          // consumers can update the drawer without morphing a pre-bonus snapshot.
+          sectionParams.set('sections', sectionIds.join(','));
+          sectionParams.set('sections_url', window.location.pathname);
+
+          const addUrl = sectionIds.length ? `/cart/add.js?${sectionParams}` : '/cart/add.js';
+
+          const res = await fetch(addUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -101,6 +121,8 @@
           });
 
           if (res.ok) {
+            const bonusResponse = await res.json().catch(() => null);
+            const sections = bonusResponse?.sections ?? null;
             const updatedCartRes = await fetch('/cart.js', {
               headers: { Accept: 'application/json' },
               cache: 'no-store',
@@ -123,7 +145,7 @@
 
               deferred.resolve({
                 cart: updatedCartSummary,
-                detail: { source: 'auto-add-bonus', itemCount: updatedCart.item_count },
+                detail: { source: 'auto-add-bonus', itemCount: updatedCart.item_count, sections },
               });
             }
           }

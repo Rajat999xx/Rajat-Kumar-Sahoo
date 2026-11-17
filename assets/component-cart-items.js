@@ -529,6 +529,20 @@ export class CartItemsComponent extends createViewEventElement(Component) {
   };
 
   /**
+   * Returns the item count embedded in a cart section response.
+   * A missing count means the response rendered an empty cart.
+   *
+   * @param {string} html
+   * @returns {number}
+   */
+  #sectionItemCount(html) {
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    const count = Number(parsed.querySelector('[ref="cartItemCount"]')?.textContent?.trim());
+
+    return Number.isFinite(count) ? count : 0;
+  }
+
+  /**
    * Handles the cart update.
    *
    * @param {CartLinesUpdateEvent} event
@@ -537,9 +551,16 @@ export class CartItemsComponent extends createViewEventElement(Component) {
     if (event.target === this) return;
 
     event.promise
-      ?.then(async ({ detail }) => {
+      ?.then(async ({ cart: resolvedCart, detail }) => {
         const sections = detail?.sections;
         const cartItemsHtml = sections?.[this.sectionId];
+        // A secondary bonus add can complete after a section response was
+        // rendered. Never morph HTML that belongs to a different cart snapshot.
+        const expectedItemCount = Number(resolvedCart?.totalQuantity);
+        const usableCartItemsHtml =
+          cartItemsHtml && Number.isFinite(expectedItemCount) && this.#sectionItemCount(cartItemsHtml) !== expectedItemCount
+            ? null
+            : cartItemsHtml;
         // Animate empty → non-empty in the drawer (possible in squeeze mode
         // where the page is interactive alongside the open drawer). This also
         // needs the response stylesheet because it adds the cart summary markup.
@@ -551,16 +572,16 @@ export class CartItemsComponent extends createViewEventElement(Component) {
           injectStylesheet: wasEmptyCartDrawer,
         };
 
-        if (cartItemsHtml) {
+        if (usableCartItemsHtml) {
           sectionRenderer.abortRender(this.sectionId);
           const existingKeys = new Set(this.refs.cartItemRows?.map((row) => row.dataset.key) ?? []);
 
           if (wasEmptyCartDrawer) {
             startViewTransition(() => {
-              morphSection(this.sectionId, cartItemsHtml, morphOptions);
+              morphSection(this.sectionId, usableCartItemsHtml, morphOptions);
             }, ['fill-cart-drawer']);
           } else {
-            await morphSection(this.sectionId, cartItemsHtml, morphOptions);
+            await morphSection(this.sectionId, usableCartItemsHtml, morphOptions);
           }
 
           // Animate newly added rows (reverse of the remove animation).
